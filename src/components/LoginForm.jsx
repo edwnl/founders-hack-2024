@@ -1,14 +1,17 @@
 import {Button, Checkbox, Form, Input} from "antd";
 import {LockOutlined, UserOutlined} from "@ant-design/icons";
 
-export const LoginForm = () => {
+export const LoginForm = (props) => {
+  const onFinish = (values) => {
+    console.log(values);
+    console.log(props.loginMode);
+  }
   return (
       <Form
           name={"LoginForm"}
           initialValues={{remember: true}}
-          onFinish={values => {
-            console.log("Success: ", values)
-          }}>
+          onFinish={onFinish}
+      className={"w-full"}>
         <Form.Item
             name={"email"}
             rules={[{

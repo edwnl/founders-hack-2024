@@ -8,22 +8,20 @@ const  UserSignupForm = (props) => {
   const [form] = Form.useForm()
 
   const [info, setInfo] = useState({
-    firstName: "",
-    lastName: "",
+    organizerName: "",
     email: "",
     password: "",
     dateOfBirth: Date,
     userType: ""
   });
   const onFinish = (values) => {
-    // e.preventDefault();
+
     setInfo({
-      firstName: values.firstName,
-      lastName: values.lastName,
+      organizerName: values.organizerName,
       email: values.email,
       password: values.password,
       dateOfBirth: values.dateOfBirth,
-      userType: "user",
+      userType: "organizer",
     })
     console.log(info)
   }
@@ -33,33 +31,16 @@ const  UserSignupForm = (props) => {
       initialValues={{remember: true}}
       onFinish={onFinish}
       className={"w-full"}>
-    <h1>First Name</h1>
+    <h1>Organizer Name</h1>
     <Form.Item
-        name={"firstName"}
+        name={"organizerName"}
         rules={[{
           required: true,
-          message: "Please enter your first name",
+          message: "Please enter your organization name",
         }]}>
-      <Input prefix={<UserOutlined/>} placeholder={"First name"}/>
+      <Input prefix={<UserOutlined/>} placeholder={"Organization name"}/>
     </Form.Item>
-    <h1>Last Name</h1>
-    <Form.Item
-        name={"lastName"}
-        rules={[{
-          required: true,
-          message: "Please enter your last name",
-        }]}>
-      <Input prefix={<UserOutlined/>} placeholder={"Last name"}/>
-    </Form.Item>
-    <h1>Date of Birth</h1>
-    <Form.Item
-        name={"dateOfBirth"}
-        rules={[{
-          required: true,
-          message: "Please enter your date of birth",
-        }]}>
-      <DatePicker format="YYYY-MM-DD"/>
-    </Form.Item>
+
     <h1>Email Address</h1>
     <Form.Item
         name={"email"}
