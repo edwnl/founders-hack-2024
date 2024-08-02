@@ -44,12 +44,6 @@ const NavBar = () => {
     ],
     organizer: [
       {
-        key: "events",
-        icon: <CalendarOutlined />,
-        label: "Events",
-        href: "/events",
-      },
-      {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
@@ -58,8 +52,8 @@ const NavBar = () => {
       {
         key: "create",
         icon: <PlusCircleOutlined />,
-        label: "Create Events",
-        href: "/events/create",
+        label: "Create Event",
+        href: "/events/new/edit",
       },
     ],
   };
