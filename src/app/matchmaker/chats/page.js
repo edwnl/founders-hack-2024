@@ -11,8 +11,9 @@ import {
   message,
   Drawer,
   Image,
+  Divider,
 } from "antd";
-import { SendOutlined, UserOutlined } from "@ant-design/icons";
+import { CloseOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
 
 const MatchmakerChatsPage = () => {
   const [matches, setMatches] = useState([]);
@@ -290,15 +291,23 @@ const MatchmakerChatsPage = () => {
 
       <Modal
         title={
-          <div className="flex justify-start items-center">
-            <span>{selectedMatch ? selectedMatch.name : "Chat"}</span>
-            <Button
-              className="ml-4"
-              icon={<UserOutlined />}
-              onClick={handleViewProfile}
-            >
-              View Profile
-            </Button>
+          <div className="flex flex-col">
+            <span className="mb-2">
+              {selectedMatch ? selectedMatch.name : "Chat"}
+            </span>
+            <div className="flex">
+              <Button
+                className="mr-2"
+                icon={<UserOutlined />}
+                onClick={handleViewProfile}
+              >
+                View Profile
+              </Button>
+              <Button icon={<CloseOutlined />} onClick={handleViewProfile}>
+                Unmatch
+              </Button>
+            </div>
+            <Divider />
           </div>
         }
         open={chatModalVisible}
