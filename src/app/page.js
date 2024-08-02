@@ -20,7 +20,7 @@ export default function LandingPage() {
         place.
       </p>
       <Space size="large">
-        <Link href="/signup?type=user">
+        <Link href={{pathname: "/signup", query:{type: "user"}}}>
           <Button
             type="primary"
             className={"bg-white text-black hover:bg-gray-200"}
