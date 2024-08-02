@@ -100,7 +100,7 @@ const NavBar = () => {
 
   return (
     <Header className="p-0 h-auto bg-black text-white">
-      <div className="flex justify-between items-center h-16 px-4 md:px-8">
+      <div className="flex justify-between items-center h-16 px-8">
         <Link href="/" className="flex items-center">
           <Image src={WhiteLogo} alt="Meetix Logo" width={120} height={40} />
         </Link>
