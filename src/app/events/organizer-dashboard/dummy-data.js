@@ -1,7 +1,7 @@
 export const dummyEvents = [
   {
     _id: "1",
-    event_picture: "https://picsum.photos/320/180",
+    event_picture: "https://picsum.photos/seed/acomiccon/320/180",
     event_name: "Tech Conference 2024",
     event_description:
       "Annual tech conference featuring the latest innovations",
@@ -15,7 +15,7 @@ export const dummyEvents = [
   },
   {
     _id: "2",
-    event_picture: "https://picsum.photos/320/180",
+    event_picture: "https://picsum.photos/seed/bcomiccon/320/180",
     event_name: "Music Festival",
     event_description: "Three-day music extravaganza with top artists",
     event_start: new Date("2024-07-01T12:00:00"),
@@ -28,7 +28,7 @@ export const dummyEvents = [
   },
   {
     _id: "3",
-    event_picture: "https://picsum.photos/320/180",
+    event_picture: "https://picsum.photos/seed/ccomiccon/320/180",
     event_name: "Food & Wine Expo",
     event_description: "Explore culinary delights and fine wines",
     event_start: new Date("2024-08-20T10:00:00"),
@@ -41,7 +41,7 @@ export const dummyEvents = [
   },
   {
     _id: "4",
-    event_picture: "https://picsum.photos/320/180",
+    event_picture: "https://picsum.photos/seed/dcomiccon/320/180",
     event_name: "Startup Pitch Night",
     event_description: "Innovative startups showcase their ideas",
     event_start: new Date("2024-10-05T18:00:00"),
@@ -54,7 +54,7 @@ export const dummyEvents = [
   },
   {
     _id: "5",
-    event_picture: "https://picsum.photos/320/180",
+    event_picture: "https://picsum.photos/seed/ecomiccon/320/180",
     event_name: "Fitness Bootcamp",
     event_description: "Intense workout sessions with pro trainers",
     event_start: new Date("2024-06-10T06:00:00"),
@@ -67,7 +67,7 @@ export const dummyEvents = [
   },
   {
     _id: "6",
-    event_picture: "https://picsum.photos/320/180",
+    event_picture: "https://picsum.photos/seed/fcomiccon/320/180",
     event_name: "Art Gallery Opening",
     event_description: "Showcasing contemporary art from emerging artists",
     event_start: new Date("2024-11-15T19:00:00"),
