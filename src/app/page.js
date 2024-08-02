@@ -1,40 +1,38 @@
-// app/page.js
 "use client";
 
-import { Button } from "antd";
+import { Button, Space } from "antd";
 import Link from "next/link";
+import IconBackground from "@/components/PeopleBackground";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-40px)] bg-background px-4">
-      <div className="text-center space-y-4 max-w-[600px]">
-        <h1 className="text-3xl font-bold text-foreground">
-          Build your component library
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Beautifully designed components that you can copy and paste into your
-          apps.
-        </p>
-        <div className="space-x-2">
-          <Link href="/signup">
-            <Button
-              type="primary"
-              size="middle"
-              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-            >
-              Get Started
-            </Button>
-          </Link>
-          <Link href="/events">
-            <Button
-              size="middle"
-              className="bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/90"
-            >
-              GitHub
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <div className="flex flex-grow flex-col items-center justify-center bg-black text-white p-16 md:mb-0 mb-24">
+      <IconBackground />
+      <h1 className="text-6xl font-bold mb-4 text-center">
+        Where Events meet
+        <br />
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+          Connections
+        </span>
+      </h1>
+      <p className="text-lg md:text-xl mb-8 text-center">
+        Discover events, make friends, and find your perfect match - all in one
+        place.
+      </p>
+      <Space size="large">
+        <Link href="/signup?type=user">
+          <Button
+            type="primary"
+            className={"bg-white text-black hover:bg-gray-200"}
+            size="large"
+          >
+            Sign Up as User
+          </Button>
+        </Link>
+        <Link href="/signup?type=organizer">
+          <Button size="large">Sign Up as Organizer</Button>
+        </Link>
+      </Space>
     </div>
   );
 }
