@@ -8,3 +8,7 @@
   }
 }
 
+.ant-upload-select {
+  width: 100% !important;
+  height: 416px !important;
+}

@@ -1,34 +1,35 @@
-// app/events/organizer-dashboard/page.js
+// app/events/user-dashboard/page.js
 "use client";
 
-import React from "react";
-import { Button, List, Card, Typography, Space } from "antd";
+import React, { useState } from "react";
+import { Button, List, Switch, Card, Typography, Space } from "antd";
 import Link from "next/link";
 import {
   CalendarOutlined,
   EnvironmentOutlined,
   ClockCircleOutlined,
   DollarOutlined,
-  TeamOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
-import { dummyEvents } from "@/app/events/organizer-dashboard/dummy-data";
+import { dummyUserEvents } from "@/app/events/user-dashboard/dummy-data";
 
 const { Text } = Typography;
 
-export default function OrganizerDashboard() {
+export default function UserDashboard() {
+  const [matchMakerProfiles, setMatchMakerProfiles] = useState({});
+
+  const toggleMatchMaker = (eventId) => {
+    setMatchMakerProfiles((prev) => ({
+      ...prev,
+      [eventId]: !prev[eventId],
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
-          <Link href={"/events/new/edit"}>
-            <Button
-              type="primary"
-              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-            >
-              Create New Event
-            </Button>
-          </Link>
         </div>
         <List
           grid={{
@@ -40,7 +41,7 @@ export default function OrganizerDashboard() {
             xl: 3,
             xxl: 3,
           }}
-          dataSource={dummyEvents}
+          dataSource={dummyUserEvents}
           renderItem={(event) => (
             <List.Item>
               <Card
@@ -55,10 +56,15 @@ export default function OrganizerDashboard() {
                 }
                 actions={[
                   <Link key="view" href={`/events/${event._id}`}>
-                    <Button>View Listing</Button>
+                    <Button>View Event</Button>
                   </Link>,
-                  <Link key="edit" href={`/events/${event._id}/edit`}>
-                    <Button>Edit Event</Button>
+                  <Link
+                    key="matchmaker"
+                    href={`/events/${event._id}/matchmaker`}
+                  >
+                    <Button disabled={!matchMakerProfiles[event._id]}>
+                      MatchMaker
+                    </Button>
                   </Link>,
                 ]}
               >
@@ -83,8 +89,15 @@ export default function OrganizerDashboard() {
                         <Text>Price: ${event.event_price}</Text>
                       </Space>
                       <Space>
-                        <TeamOutlined />
-                        <Text>Total Attendees: {event.attendees.length}</Text>
+                        <IdcardOutlined />
+                        <Text>Your Tickets: {event.user_tickets}</Text>
+                      </Space>
+                      <Space>
+                        <Text>Show in Match Maker:</Text>
+                        <Switch
+                          checked={matchMakerProfiles[event._id]}
+                          onChange={() => toggleMatchMaker(event._id)}
+                        />
                       </Space>
                     </Space>
                   }

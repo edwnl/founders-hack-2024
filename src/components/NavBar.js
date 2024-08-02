@@ -12,23 +12,18 @@ import {
   LoginOutlined,
   LogoutOutlined,
   MenuOutlined,
+  InboxOutlined,
 } from "@ant-design/icons";
 import WhiteLogo from "../public/meetix-full-logo-white.svg";
 
 const { Header } = Layout;
 
 const NavBar = () => {
-  const [userState, setUserState] = useState("organizer"); // 'notLoggedIn', 'user', 'organizer'
+  const [userState, setUserState] = useState("user"); // 'notLoggedIn', 'user', 'organizer'
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
 
   const menuItems = {
     user: [
-      {
-        key: "events",
-        icon: <CalendarOutlined />,
-        label: "Events",
-        href: "/events",
-      },
       {
         key: "dashboard",
         icon: <UserOutlined />,
@@ -36,10 +31,16 @@ const NavBar = () => {
         href: "/events/user-dashboard",
       },
       {
-        key: "matchmaker",
+        key: "profile",
         icon: <TeamOutlined />,
-        label: "Matchmaker",
+        label: "Matchmaker Profile",
         href: "/matchmaker/profile",
+      },
+      {
+        key: "chats",
+        icon: <InboxOutlined />,
+        label: "Chats",
+        href: "/matchmaker/chats",
       },
     ],
     organizer: [
