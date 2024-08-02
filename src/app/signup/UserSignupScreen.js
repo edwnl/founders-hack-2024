@@ -93,10 +93,18 @@ const  UserSignupForm = (props) => {
     <h1>Re-enter your password</h1>
     <Form.Item
         name={"confirmPassword"}
+        dependencies={["password"]}
         rules={[{
           required: true,
           message: "Please re-enter your password",
-        }]}>
+        },
+          ({ getFieldValue }) => ({
+            validator(_,value){
+              if(!value || getFieldValue("password") === value){
+                return Promise.resolve();
+              }
+            return Promise.reject(new Error('The password you entered does not match'))}
+          })]}>
       <Input.Password prefix={<LockOutlined/>} placeholder={"Confirm Password"}/>
     </Form.Item>
     <Form.Item>
