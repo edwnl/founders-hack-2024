@@ -59,7 +59,8 @@ export default function OrganizerDashboard() {
                     <>
                       <p>{event.event_location}</p>
                       <p>
-                        {event.event_start.toLocaleDateString()}{" "}
+                        {event.event_start.toLocaleDateString()}
+                        {""}
                         {event.event_start.toLocaleTimeString()} -
                         {event.event_end.toLocaleDateString()}{" "}
                         {event.event_end.toLocaleTimeString()}
