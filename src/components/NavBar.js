@@ -1,119 +1,145 @@
-// components/Navbar.js
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Button, Dropdown, Menu } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
+import Image from "next/image";
+import { Layout, Menu, Button } from "antd";
+import {
+  UserOutlined,
+  TeamOutlined,
+  CalendarOutlined,
+  PlusCircleOutlined,
+  LoginOutlined,
+  LogoutOutlined,
+  MenuOutlined,
+} from "@ant-design/icons";
+import WhiteLogo from "../public/meetix-full-logo-white.svg";
 
-const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState(null); // 'user' or 'organizer'
+const { Header } = Layout;
 
-  const renderDesktopMenu = () => {
-    if (!isLoggedIn) {
+const NavBar = () => {
+  const [userState, setUserState] = useState("organizer"); // 'notLoggedIn', 'user', 'organizer'
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+
+  const menuItems = {
+    user: [
+      {
+        key: "events",
+        icon: <CalendarOutlined />,
+        label: "Events",
+        href: "/events",
+      },
+      {
+        key: "dashboard",
+        icon: <UserOutlined />,
+        label: "Dashboard",
+        href: "/events/user-dashboard",
+      },
+      {
+        key: "matchmaker",
+        icon: <TeamOutlined />,
+        label: "Matchmaker",
+        href: "/matchmaker/profile",
+      },
+    ],
+    organizer: [
+      {
+        key: "events",
+        icon: <CalendarOutlined />,
+        label: "Events",
+        href: "/events",
+      },
+      {
+        key: "dashboard",
+        icon: <UserOutlined />,
+        label: "Dashboard",
+        href: "/events/organizer-dashboard",
+      },
+      {
+        key: "create",
+        icon: <PlusCircleOutlined />,
+        label: "Create Events",
+        href: "/events/create",
+      },
+    ],
+  };
+
+  const renderMenuItem = (item) => (
+    <Menu.Item key={item.key} icon={item.icon}>
+      <Link href={item.href} onClick={() => setMobileMenuVisible(false)}>
+        {item.label}
+      </Link>
+    </Menu.Item>
+  );
+
+  const renderAuthButton = () => {
+    if (userState === "notLoggedIn") {
       return (
-        <div className="hidden md:flex items-center space-x-4">
+        <>
           <Link href="/login">
-            <Button
-              type="link"
-              className="text-muted-foreground hover:text-foreground"
-            >
+            <Button type="text" icon={<LoginOutlined />}>
               Login
             </Button>
           </Link>
           <Link href="/signup">
             <Button type="primary">Sign Up</Button>
           </Link>
-        </div>
+        </>
       );
-    }
-
-    const menuItems =
-      userType === "organizer"
-        ? ["Events", "Dashboard", "Create Events"]
-        : ["Events", "Dashboard", "Matchmaker"];
-
-    return (
-      <>
-        <div className="hidden md:flex items-center space-x-4 flex-grow justify-center">
-          {menuItems.map((item) => (
-            <Link key={item} href={`/${item.toLowerCase().replace(" ", "-")}`}>
-              <Button
-                type="link"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {item}
-              </Button>
-            </Link>
-          ))}
-        </div>
+    } else {
+      return (
         <Button
-          onClick={() => console.log("sign out")}
-          type="link"
-          className="hidden md:block text-muted-foreground hover:text-foreground"
+          icon={<LogoutOutlined />}
+          onClick={() => setUserState("notLoggedIn")}
         >
           Sign Out
         </Button>
-      </>
-    );
+      );
+    }
   };
 
-  const mobileMenu = (
-    <Menu theme="dark">
-      {isLoggedIn ? (
-        <>
-          <Menu.Item key="events">
-            <Link href="/events">Events</Link>
-          </Menu.Item>
-          <Menu.Item key="dashboard">
-            <Link href="/dashboard">Dashboard</Link>
-          </Menu.Item>
-          {userType === "organizer" ? (
-            <Menu.Item key="create-events">
-              <Link href="/create-events">Create Events</Link>
-            </Menu.Item>
-          ) : (
-            <Menu.Item key="matchmaker">
-              <Link href="/matchmaker">Matchmaker</Link>
-            </Menu.Item>
-          )}
-          <Menu.Item key="signout" onClick={handleSignOut}>
-            Sign Out
-          </Menu.Item>
-        </>
-      ) : (
-        <>
-          <Menu.Item key="login">
-            <Link href="/login">Login</Link>
-          </Menu.Item>
-          <Menu.Item key="signup">
-            <Link href="/signup">Sign Up</Link>
-          </Menu.Item>
-        </>
-      )}
-    </Menu>
-  );
-
   return (
-    <nav className="bg-background py-2">
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link href="/" className="text-md font-semibold text-foreground">
-          EventMatchmaker
+    <Header className="p-0 h-auto bg-black text-white">
+      <div className="flex justify-between items-center h-16 px-4 md:px-8">
+        <Link href="/" className="flex items-center">
+          <Image src={WhiteLogo} alt="Meetix Logo" width={120} height={40} />
         </Link>
-        {renderDesktopMenu()}
-        <Dropdown
-          overlay={mobileMenu}
-          trigger={["click"]}
-          className="md:hidden"
-        >
-          <Button type="link" className="text-muted-foreground p-0">
-            <MenuOutlined />
-          </Button>
-        </Dropdown>
+
+        {userState !== "notLoggedIn" && (
+          <div className="hidden md:block">
+            <Menu
+              className="border-none bg-transparent"
+              mode="horizontal"
+              disabledOverflow={true}
+              selectable={false}
+              selectedKeys={[]}
+            >
+              {menuItems[userState].map(renderMenuItem)}
+            </Menu>
+          </div>
+        )}
+
+        <div className="flex items-center">
+          {renderAuthButton()}
+          <div className="md:hidden ml-4">
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileMenuVisible(!mobileMenuVisible)}
+            />
+          </div>
+        </div>
       </div>
-    </nav>
+
+      {mobileMenuVisible && userState !== "notLoggedIn" && (
+        <div className="lg:hidden">
+          <Menu mode="vertical" className="border-none bg-transparent">
+            {menuItems[userState].map(renderMenuItem)}
+          </Menu>
+        </div>
+      )}
+    </Header>
   );
 };
 
-export default Navbar;
+export default NavBar;
