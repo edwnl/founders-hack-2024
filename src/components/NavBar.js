@@ -44,12 +44,6 @@ const NavBar = () => {
     ],
     organizer: [
       {
-        key: "events",
-        icon: <CalendarOutlined />,
-        label: "Events",
-        href: "/events",
-      },
-      {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
@@ -58,8 +52,8 @@ const NavBar = () => {
       {
         key: "create",
         icon: <PlusCircleOutlined />,
-        label: "Create Events",
-        href: "/events/create",
+        label: "Create Event",
+        href: "/events/new/edit",
       },
     ],
   };
@@ -100,7 +94,7 @@ const NavBar = () => {
 
   return (
     <Header className="p-0 h-auto bg-black text-white">
-      <div className="flex justify-between items-center h-16 px-4 md:px-8">
+      <div className="flex justify-between items-center h-16 px-8">
         <Link href="/" className="flex items-center">
           <Image src={WhiteLogo} alt="Meetix Logo" width={120} height={40} />
         </Link>
