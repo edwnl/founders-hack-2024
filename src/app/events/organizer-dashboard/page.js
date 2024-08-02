@@ -1,7 +1,7 @@
 // app/events/organizer-dashboard/page.js
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button, List, Modal } from "antd";
 import Link from "next/link";
 import { dummyEvents } from "@/app/events/organizer-dashboard/dummy-data";
@@ -22,13 +22,14 @@ export default function OrganizerDashboard() {
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
-          <Button
-            type="primary"
-            onClick={showModal}
-            className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-          >
-            Create New Event
-          </Button>
+          <Link href={"/events/new/edit"}>
+            <Button
+              type="primary"
+              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+            >
+              Create New Event
+            </Button>
+          </Link>
         </div>
         <List
           itemLayout="horizontal"
