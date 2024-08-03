@@ -42,17 +42,17 @@ const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
 const prompts = {
-  prompt1: [
+  "Prompt 1": [
     "What's your favorite way to spend a weekend?",
     "If you could learn any skill instantly, what would it be?",
     "What's the most adventurous thing you've ever done?",
   ],
-  prompt2: [
+  "Prompt 2": [
     "What's your go-to comfort food?",
     "If you could only eat one cuisine for the rest of your life, what would it be?",
     "What's the weirdest food combination you enjoy?",
   ],
-  prompt3: [
+  "Prompt 3": [
     "What's one thing you can't stand?",
     "If you could change one thing about the world, what would it be?",
     "What's a popular opinion you disagree with?",
@@ -73,7 +73,8 @@ const australianCities = [
 ];
 
 const MatchmakerProfilePage = () => {
-  const [form] = Form.useForm();
+  const [profileForm] = Form.useForm();
+  const [editForm] = Form.useForm();
   const { user } = useAuth();
   const [profile, setProfile] = useState({
     matchmaker_name: "",
@@ -101,8 +102,19 @@ const MatchmakerProfilePage = () => {
   ]);
 
   useEffect(() => {
-    console.log("Profile state updated:", profile);
-  }, [profile]);
+    // Update profile form fields when profile changes
+    profileForm.setFieldsValue({
+      matchmaker_name: profile.matchmaker_name,
+      location: profile.location,
+      matchmaker_preference: profile.matchmaker_preference,
+      matchmaker_bio: profile.matchmaker_bio,
+      prompt_1: profile.matchmaker_prompts?.["Prompt 1"],
+      prompt_2: profile.matchmaker_prompts?.["Prompt 2"],
+      prompt_3: profile.matchmaker_prompts?.["Prompt 3"],
+    });
+  }, [profile, profileForm]);
+
+  useEffect(() => {
     async function fetchProfile() {
       if (user) {
         const result = await loadMatchmakerProfile(user.uid);
@@ -112,7 +124,7 @@ const MatchmakerProfilePage = () => {
             ...prevProfile,
             ...profileData,
           }));
-          form.setFieldsValue(profileData);
+          profileForm.setFieldsValue(profileData);
           if (!profileData.date_of_birth) {
             setDobModalVisible(true);
           }
@@ -123,39 +135,7 @@ const MatchmakerProfilePage = () => {
       }
     }
     fetchProfile();
-  }, [user, form]);
-
-  const handleProfileChange = (field, value) => {
-    console.log(
-      `handleProfileChange called with field: ${field}, value:`,
-      value,
-    );
-    setProfile((prevProfile) => {
-      const newProfile = { ...prevProfile, [field]: value };
-      console.log("Previous profile:", prevProfile);
-      console.log("New profile:", newProfile);
-      return newProfile;
-    });
-  };
-
-  const handlePromptChange = (promptKey, value) => {
-    console.log(
-      `handlePromptChange called with promptKey: ${promptKey}, value:`,
-      value,
-    );
-    setProfile((prevProfile) => {
-      const newProfile = {
-        ...prevProfile,
-        matchmaker_prompts: {
-          ...prevProfile.matchmaker_prompts,
-          [promptKey]: value,
-        },
-      };
-      console.log("Previous profile:", prevProfile);
-      console.log("New profile:", newProfile);
-      return newProfile;
-    });
-  };
+  }, [user, profileForm]);
 
   const handleImageUpload = (index, info) => {
     if (info.file.status === "done") {
@@ -166,20 +146,63 @@ const MatchmakerProfilePage = () => {
       // Create a temporary URL for preview
       const previewUrl = URL.createObjectURL(info.file.originFileObj);
       const newPictures = [...profile.matchmaker_pictures];
-      newPictures[index] = info.file.response.url; // Assuming the server returns the image URL
       newPictures[index] = previewUrl;
-      handleProfileChange("matchmaker_pictures", newPictures);
+      setProfile((prev) => ({
+        ...prev,
+        matchmaker_pictures: newPictures,
+      }));
     }
   };
 
   const showEditModal = (field) => {
     setEditingField(field);
+    // Set the initial values for the edit form
+    if (field === "Personal Info") {
+      editForm.setFieldsValue({
+        matchmaker_name: profile.matchmaker_name,
+        location: profile.location,
+        matchmaker_preference: profile.matchmaker_preference,
+      });
+    } else if (field === "bio") {
+      editForm.setFieldsValue({
+        matchmaker_bio: profile.matchmaker_bio,
+      });
+    } else if (field.startsWith("Prompt")) {
+      const promptKey = field.toLowerCase().replace(" ", "_");
+      editForm.setFieldsValue({
+        [promptKey]: profile.matchmaker_prompts?.[field],
+      });
+    }
     setEditModalVisible(true);
   };
 
   const handleEditModalOk = () => {
-    setEditModalVisible(false);
-    setEditingField(null);
+    editForm.validateFields().then((values) => {
+      if (editingField === "Personal Info") {
+        setProfile((prev) => ({
+          ...prev,
+          matchmaker_name: values.matchmaker_name,
+          location: values.location,
+          matchmaker_preference: values.matchmaker_preference,
+        }));
+      } else if (editingField === "bio") {
+        setProfile((prev) => ({
+          ...prev,
+          matchmaker_bio: values.matchmaker_bio,
+        }));
+      } else if (editingField.startsWith("Prompt")) {
+        const promptKey = editingField.toLowerCase().replace(" ", "_");
+        setProfile((prev) => ({
+          ...prev,
+          matchmaker_prompts: {
+            ...prev.matchmaker_prompts,
+            [editingField]: values[promptKey],
+          },
+        }));
+      }
+      setEditModalVisible(false);
+      setEditingField(null);
+    });
   };
 
   const handleEditModalCancel = () => {
@@ -189,9 +212,8 @@ const MatchmakerProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const values = await form.validateFields();
-
-      console.log(values);
+      const values = await profileForm.validateFields();
+      console.log("Form values:", values);
 
       // Check if all required fields are filled
       if (
@@ -210,13 +232,14 @@ const MatchmakerProfilePage = () => {
       }
 
       // Check if all prompts are filled
-      const promptValues = [values.prompt_1, values.prompt_2, values.prompt_3];
+      const promptFields = ["prompt_1", "prompt_2", "prompt_3"];
       const matchmaker_prompts = {};
       let allPromptsFilledOut = true;
 
-      promptValues.forEach((promptValue, index) => {
+      promptFields.forEach((field) => {
+        const promptValue = values[field];
         if (promptValue && promptValue.question && promptValue.answer) {
-          matchmaker_prompts[promptValue.question] = promptValue.answer;
+          matchmaker_prompts[field.replace("_", " ")] = promptValue;
         } else {
           allPromptsFilledOut = false;
         }
@@ -242,20 +265,32 @@ const MatchmakerProfilePage = () => {
         }
       }
 
+      // Prepare the profile data to be saved
       const profileData = {
-        ...values,
+        matchmaker_name: values.matchmaker_name,
+        location: values.location,
+        matchmaker_preference: values.matchmaker_preference,
+        matchmaker_bio: values.matchmaker_bio,
         matchmaker_prompts,
         matchmaker_pictures: updatedPictures,
       };
 
+      // Save the profile data
       const result = await saveMatchmakerProfile(user.uid, profileData);
       if (result.success) {
         message.success(result.message);
         setNewImages([null, null, null, null, null, null]);
+
+        // Update the local profile state
+        setProfile((prevProfile) => ({
+          ...prevProfile,
+          ...profileData,
+        }));
       } else {
         message.error(result.error);
       }
     } catch (error) {
+      console.error("Form validation error:", error);
       message.error("Please fill in all required fields.");
     }
   };
@@ -266,80 +301,74 @@ const MatchmakerProfilePage = () => {
       case "Personal Info":
         content = (
           <>
-            <Input
-              placeholder="Name"
-              value={profile.matchmaker_name}
-              onChange={(e) =>
-                handleProfileChange("matchmaker_name", e.target.value)
-              }
-            />
-            <Select
-              style={{ width: "100%", marginTop: "10px" }}
-              value={profile.location}
-              onChange={(value) => handleProfileChange("location", value)}
+            <Form.Item
+              name="matchmaker_name"
+              label="Name"
+              rules={[{ required: true, message: "Please enter your name" }]}
             >
-              {australianCities.map((city) => (
-                <Option key={city} value={city}>
-                  {city}
-                </Option>
-              ))}
-            </Select>
-            <Select
-              style={{ width: "100%", marginTop: "10px" }}
-              value={profile.matchmaker_preference}
-              onChange={(value) =>
-                handleProfileChange("matchmaker_preference", value)
-              }
+              <Input placeholder="Name" />
+            </Form.Item>
+            <Form.Item
+              name="location"
+              label="City"
+              rules={[{ required: true, message: "Please select your city" }]}
             >
-              <Option value="FRIENDS">Looking for Friends</Option>
-              <Option value="MORE_THAN_FRIENDS">More than Friends</Option>
-            </Select>
+              <Select style={{ width: "100%" }}>
+                {australianCities.map((city) => (
+                  <Option key={city} value={city}>
+                    {city}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="matchmaker_preference"
+              label="Preference"
+              rules={[
+                { required: true, message: "Please select your preference" },
+              ]}
+            >
+              <Select style={{ width: "100%" }}>
+                <Option value="FRIENDS">Looking for Friends</Option>
+                <Option value="MORE_THAN_FRIENDS">More than Friends</Option>
+              </Select>
+            </Form.Item>
           </>
         );
         break;
       case "bio":
         content = (
-          <Input.TextArea
-            value={profile.matchmaker_bio}
-            onChange={(e) =>
-              handleProfileChange("matchmaker_bio", e.target.value)
-            }
-            rows={4}
-          />
+          <Form.Item
+            name="matchmaker_bio"
+            rules={[{ required: true, message: "Please enter your bio" }]}
+          >
+            <Input.TextArea rows={4} placeholder="Tell us about yourself..." />
+          </Form.Item>
         );
         break;
       case "Prompt 1":
       case "Prompt 2":
       case "Prompt 3":
-        const promptKey = editingField;
+        const promptKey = editingField.toLowerCase().replace(" ", "_");
         content = (
-          <>
-            <Select
-              style={{ width: "100%" }}
-              placeholder="Select a prompt"
-              value={profile.matchmaker_prompts?.[promptKey]?.question}
-              onChange={(value) =>
-                handlePromptChange(promptKey, { question: value, answer: "" })
-              }
-            >
-              {prompts[promptKey].map((prompt) => (
-                <Option key={prompt} value={prompt}>
-                  {prompt}
-                </Option>
-              ))}
-            </Select>
-            <Input.TextArea
-              style={{ marginTop: "10px" }}
-              placeholder="Your answer"
-              value={profile.matchmaker_prompts?.[promptKey]?.answer || ""}
-              onChange={(e) =>
-                handlePromptChange(promptKey, {
-                  question: profile.matchmaker_prompts?.[promptKey]?.question,
-                  answer: e.target.value,
-                })
-              }
-            />
-          </>
+          <Form.Item
+            name={promptKey}
+            rules={[{ required: true, message: "Please fill out this prompt" }]}
+          >
+            <div>
+              <Select
+                style={{ width: "100%", marginBottom: "10px" }}
+                placeholder="Select a prompt"
+              >
+                {prompts[editingField].map((prompt) => (
+                  <Option key={prompt} value={prompt}>
+                    {prompt}
+                  </Option>
+                ))}
+              </Select>
+              <Input.TextArea placeholder="Your answer" />
+            </div>
+          </Form.Item>
         );
         break;
       default:
@@ -353,7 +382,9 @@ const MatchmakerProfilePage = () => {
         onOk={handleEditModalOk}
         onCancel={handleEditModalCancel}
       >
-        {content}
+        <Form form={editForm} layout="vertical">
+          {content}
+        </Form>
       </Modal>
     );
   };
@@ -407,7 +438,7 @@ const MatchmakerProfilePage = () => {
   return (
     <div className="min-h-screen bg-background p-8 pb-24">
       <div className="max-w-5xl mx-auto">
-        <Form form={form} onFinish={handleSaveProfile}>
+        <Form form={profileForm} onFinish={handleSaveProfile}>
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
               <Card className="h-[200px] flex flex-col justify-center relative">
@@ -416,7 +447,9 @@ const MatchmakerProfilePage = () => {
                   icon={<EditOutlined />}
                   onClick={() => showEditModal("Personal Info")}
                 />
-                <Title level={4}>{profile.matchmaker_name}</Title>
+                <Title level={4}>
+                  {profile.matchmaker_name || "Add your name"}
+                </Title>
                 <p>
                   Age:{" "}
                   {profile.date_of_birth
@@ -426,17 +459,21 @@ const MatchmakerProfilePage = () => {
                       )
                     : "Not set"}
                 </p>
-                <p>{profile.location}</p>
+                <p>{profile.location || "Select your city"}</p>
                 <Tag
                   color={
                     profile.matchmaker_preference === "FRIENDS"
                       ? "blue"
-                      : "pink"
+                      : profile.matchmaker_preference === "MORE_THAN_FRIENDS"
+                        ? "pink"
+                        : "default"
                   }
                 >
                   {profile.matchmaker_preference === "FRIENDS"
                     ? "Looking for Friends"
-                    : "More than Friends"}
+                    : profile.matchmaker_preference === "MORE_THAN_FRIENDS"
+                      ? "More than Friends"
+                      : "Select your preference"}
                 </Tag>
               </Card>
               <Card className="mt-4 h-[200px] flex flex-col justify-center relative">
@@ -468,11 +505,11 @@ const MatchmakerProfilePage = () => {
                   onClick={() => showEditModal("Prompt 1")}
                 />
                 <Title level={5}>
-                  {profile.matchmaker_prompts?.prompt1?.question ||
+                  {profile.matchmaker_prompts?.["Prompt 1"]?.question ||
                     "Select a prompt"}
                 </Title>
                 <Paragraph>
-                  {profile.matchmaker_prompts?.prompt1?.answer ||
+                  {profile.matchmaker_prompts?.["Prompt 1"]?.answer ||
                     "Your answer here..."}
                 </Paragraph>
               </Card>
@@ -483,11 +520,11 @@ const MatchmakerProfilePage = () => {
                   onClick={() => showEditModal("Prompt 2")}
                 />
                 <Title level={5}>
-                  {profile.matchmaker_prompts?.prompt2?.question ||
+                  {profile.matchmaker_prompts?.["Prompt 2"]?.question ||
                     "Select a prompt"}
                 </Title>
                 <Paragraph>
-                  {profile.matchmaker_prompts?.prompt2?.answer ||
+                  {profile.matchmaker_prompts?.["Prompt 2"]?.answer ||
                     "Your answer here..."}
                 </Paragraph>
               </Card>
@@ -510,11 +547,11 @@ const MatchmakerProfilePage = () => {
                   onClick={() => showEditModal("Prompt 3")}
                 />
                 <Title level={5}>
-                  {profile.matchmaker_prompts?.prompt3?.question ||
+                  {profile.matchmaker_prompts?.["Prompt 3"]?.question ||
                     "Select a prompt"}
                 </Title>
                 <Paragraph>
-                  {profile.matchmaker_prompts?.prompt3?.answer ||
+                  {profile.matchmaker_prompts?.["Prompt 3"]?.answer ||
                     "Your answer here..."}
                 </Paragraph>
               </Card>
@@ -562,7 +599,7 @@ const MatchmakerProfilePage = () => {
             const dobTimestamp = Timestamp.fromDate(selectedDOB.toDate());
             const result = await updateDateOfBirth(user.uid, dobTimestamp);
             if (result.success) {
-              handleProfileChange("date_of_birth", dobTimestamp);
+              setProfile((prev) => ({ ...prev, date_of_birth: dobTimestamp }));
               setDobModalVisible(false);
               message.success("Date of birth updated successfully");
             } else {
