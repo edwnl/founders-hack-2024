@@ -3,36 +3,72 @@
 import { Button, Space } from "antd";
 import Link from "next/link";
 import IconBackground from "@/components/PeopleBackground";
+import {
+  LoginOutlined,
+  LogoutOutlined,
+  UserOutlined,
+  DashboardOutlined,
+} from "@ant-design/icons";
+import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LandingPage() {
+  const { user, userMode } = useAuth();
+
+  const renderAuthButtons = () => {
+    if (user) {
+      const dashboardLink =
+        userMode === "organizer" ? "/organizer-dashboard" : "/user-dashboard";
+      return (
+        <Link href={dashboardLink}>
+          <Button
+            type="primary"
+            icon={<DashboardOutlined />}
+            className={"bg-white text-black hover:bg-gray-200"}
+            size="large"
+          >
+            Go to {userMode === "organizer" ? "Organizer" : "User"} Dashboard
+          </Button>
+        </Link>
+      );
+    } else {
+      return (
+        <>
+          <Link href="/signup">
+            <Button
+              type="primary"
+              icon={<UserOutlined />}
+              className={"bg-white text-black hover:bg-gray-200"}
+              size="large"
+            >
+              Sign Up Now
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button icon={<LoginOutlined />} size="large">
+              Login
+            </Button>
+          </Link>
+        </>
+      );
+    }
+  };
+
   return (
-    <div className="flex flex-grow flex-col items-center justify-center bg-black text-white p-16 md:mb-0 mb-24">
+    <div className="flex flex-grow flex-col items-center justify-center bg-black text-white p-8 md:mb-0 mb-24">
       <IconBackground />
-      <h1 className="text-6xl font-bold mb-4 text-center">
+      <h1 className="md:text-6xl text-5xl font-bold mb-4 text-center">
         Where Events meet
         <br />
         <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-          Connections
+          Connections.
         </span>
       </h1>
       <p className="text-lg md:text-xl mb-8 text-center">
         Discover events, make friends, and find your perfect match - all in one
         place.
       </p>
-      <Space size="large">
-        <Link href={{pathname: "/signup", query:{type: "user"}}}>
-          <Button
-            type="primary"
-            className={"bg-white text-black hover:bg-gray-200"}
-            size="large"
-          >
-            Sign Up as User
-          </Button>
-        </Link>
-        <Link href="/signup?type=organizer">
-          <Button size="large">Sign Up as Organizer</Button>
-        </Link>
-      </Space>
+      <Space size="small">{renderAuthButtons()}</Space>
     </div>
   );
 }
