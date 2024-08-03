@@ -38,7 +38,7 @@ function OrganizerDashboard() {
           <Button
             type="primary"
             className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-            onClick={showModal}
+            onClick={() => router.push("/events/new/edit")}
           >
             Create New Event
           </Button>

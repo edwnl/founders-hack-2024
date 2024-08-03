@@ -101,8 +101,8 @@ function EditEvent() {
       }
 
       if (result.success) {
-        if (isNewEvent) setNewEvent(false);
         message.success(result.message);
+        if (isNewEvent) router.push("/dashboard");
       } else {
         message.error(result.error);
         throw new Error(result.error);
@@ -143,9 +143,20 @@ function EditEvent() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-foreground mb-6">
-          {isNewEvent ? "Create a new Event" : "Edit Event"}
-        </h1>
+        <div className={"flex"}>
+          <h1 className="text-3xl font-bold text-foreground mb-6">
+            {isNewEvent ? "Create a new Event" : "Edit Event"}
+          </h1>
+          {!isNewEvent && (
+            <Button
+              onClick={() => router.push(`/events/${event_id}`)}
+              className={"ml-4"}
+            >
+              View Event
+            </Button>
+          )}
+        </div>
+
         <Form
           form={form}
           layout="vertical"
