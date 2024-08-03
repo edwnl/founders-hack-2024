@@ -12,3 +12,7 @@
   width: 100% !important;
   height: 416px !important;
 }
+
+.ant-spin-dot-spin {
+  color: white !important;
+}

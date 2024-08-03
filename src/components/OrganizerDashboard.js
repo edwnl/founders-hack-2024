@@ -12,10 +12,8 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { dummyEvents } from "@/components/dummy-organizer-data";
-import { createNewEvent } from "@/app/events/actions";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { withGuard } from "@/components/GuardRoute"; // Import the useAuth hook
 
 const { Text } = Typography;
 
@@ -30,25 +28,6 @@ function OrganizerDashboard() {
 
   const handleCancel = () => {
     setIsModalVisible(false);
-  };
-
-  const handleCreateEvent = async () => {
-    setIsModalVisible(false);
-    console.log(userMode);
-
-    return;
-
-    if (!user) {
-      console.error("User not authenticated");
-      return;
-    }
-    const result = await createNewEvent(user.uid); // Pass the user ID to the server action
-    if (result.success) {
-      router.push(`/events/${result.eventId}/edit`);
-    } else {
-      // Handle error (e.g., show an error message)
-      console.error("Failed to create event:", result.error);
-    }
   };
 
   return (
@@ -130,8 +109,8 @@ function OrganizerDashboard() {
       </div>
       <Modal
         title="Create New Event"
-        visible={isModalVisible}
-        onOk={handleCreateEvent}
+        open={isModalVisible}
+        onOk={() => router.push("/events/new/edit")}
         onCancel={handleCancel}
         okText="Create"
         cancelText="Cancel"
