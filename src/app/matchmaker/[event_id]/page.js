@@ -1,4 +1,4 @@
-// app/matchmaker/[event-id]/page.js
+// app/matchmaker/[event-id]/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +9,7 @@ import {
   CalendarOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
+import { withGuard } from "@/components/GuardRoute";
 
 const MatchmakerEventPage = ({ params }) => {
   const [attendees, setAttendees] = useState([]);
@@ -205,4 +206,7 @@ const MatchmakerEventPage = ({ params }) => {
   );
 };
 
-export default MatchmakerEventPage;
+export default withGuard(MatchmakerEventPage, {
+  requireAuth: true,
+  requiredMode: "user",
+});

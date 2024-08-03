@@ -1,4 +1,4 @@
-// app/events/[event_id]/edit/page.js
+// app/events/[event_id]/edit/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,11 +13,12 @@ import {
   message,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import { withGuard } from "@/components/GuardRoute";
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
-export default function EditEvent() {
+function EditEvent() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -158,3 +159,8 @@ export default function EditEvent() {
     </div>
   );
 }
+
+export default withGuard(EditEvent, {
+  requireAuth: true,
+  requiredMode: "organizer",
+});
