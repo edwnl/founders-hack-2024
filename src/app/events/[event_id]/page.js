@@ -1,4 +1,3 @@
-// app/events/[event-id]/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +9,6 @@ import {
   message,
   Card,
   Descriptions,
-  Tag,
   Statistic,
   Row,
   Col,
@@ -30,6 +28,9 @@ import {
 import Image from "next/image";
 import dayjs from "dayjs";
 import { withGuard } from "@/components/GuardRoute";
+import { useAuth } from "@/contexts/AuthContext";
+import { db } from "../../../../firebase/config";
+import { collection, doc, getDoc, updateDoc, increment } from "firebase/firestore";
 
 function EventDetails() {
   const [event, setEvent] = useState(null);
@@ -40,6 +41,7 @@ function EventDetails() {
   const params = useParams();
   const router = useRouter();
   const event_id = params.event_id;
+  const { user } = useAuth();
 
   async function getEventData() {
     setLoading(true);
@@ -53,24 +55,25 @@ function EventDetails() {
   }
 
   useEffect(() => {
-    // Simulating API call to get event data
-    setTimeout(() => {
-      const dummyEvent = {
-        id: event_id,
-        event_name: "Sample Event",
-        event_description:
-          "This is a sample event description. It's going to be an amazing event you don't want to miss!",
-        event_location: "New York, NY",
-        event_start: dayjs().add(1, "month"),
-        event_end: dayjs().add(1, "month").add(3, "hour"),
-        event_price: 50,
-        event_capacity: 100,
-        event_picture: "https://picsum.photos/seed/picsum/800/400",
-        available_tickets: 50,
-      };
-      setEvent(dummyEvent);
-      setLoading(false);
-    }, 1000);
+    const fetchEvent = async () => {
+      try {
+        const eventRef = doc(db, "event", event_id);
+        const eventSnap = await getDoc(eventRef);
+
+        if (eventSnap.exists()) {
+          setEvent(eventSnap.data());
+        } else {
+          message.error("Event not found");
+        }
+      } catch (error) {
+        message.error("Error fetching event data");
+        console.error("Error: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
   }, [event_id]);
 
   const showModal = () => setIsModalVisible(true);
@@ -80,15 +83,32 @@ function EventDetails() {
     setTicketQuantity(1);
   };
 
-  const handleBuyTickets = () => {
+  const handleBuyTickets = async () => {
     if (checkoutStep === 0) {
       setCheckoutStep(1);
     } else {
-      // Simulating payment process
-      setTimeout(() => {
+      try {
+        // Simulating payment process
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Update user's tickets
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          [`tickets.${event_id}`]: increment(ticketQuantity),
+        });
+
+        // Update event attendees
+        const eventRef = doc(db, "event", event_id);
+        await updateDoc(eventRef, {
+          attendees: increment(ticketQuantity),
+        });
+
         message.success(`Successfully purchased ${ticketQuantity} ticket(s)!`);
         setCheckoutStep(2);
-      }, 1000);
+      } catch (error) {
+        message.error("Error processing the transaction.");
+        console.error("Error: ", error);
+      }
     }
   };
   const goToMatchmaking = () => {
@@ -99,6 +119,18 @@ function EventDetails() {
     return (
       <div className="min-h-screen bg-background p-8 flex justify-center items-center">
         Loading...
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-background p-8 flex justify-center items-center">
+        <Result
+          status="404"
+          title="Event Not Found"
+          subTitle="Sorry, the event you are looking for does not exist."
+        />
       </div>
     );
   }
@@ -141,12 +173,12 @@ function EventDetails() {
           <Descriptions bordered>
             <Descriptions.Item label="Date" span={3}>
               <CalendarOutlined className="mr-2" />
-              {event.event_start.format("MMMM D, YYYY")}
+              {dayjs(event.event_start.toDate()).format("MMMM D, YYYY")}
             </Descriptions.Item>
             <Descriptions.Item label="Time" span={3}>
               <CalendarOutlined className="mr-2" />
-              {event.event_start.format("h:mm A")} -{" "}
-              {event.event_end.format("h:mm A")}
+              {dayjs(event.event_start.toDate()).format("h:mm A")} -{" "}
+              {dayjs(event.event_end.toDate()).format("h:mm A")}
             </Descriptions.Item>
             <Descriptions.Item label="Location" span={3}>
               <EnvironmentOutlined className="mr-2" />
@@ -213,11 +245,11 @@ function EventDetails() {
                 {event.event_name}
               </Descriptions.Item>
               <Descriptions.Item label="Date">
-                {event.event_start.format("MMMM D, YYYY")}
+                {dayjs(event.event_start.toDate()).format("MMMM D, YYYY")}
               </Descriptions.Item>
               <Descriptions.Item label="Time">
-                {event.event_start.format("h:mm A")} -{" "}
-                {event.event_end.format("h:mm A")}
+                {dayjs(event.event_start.toDate()).format("h:mm A")} -{" "}
+                {dayjs(event.event_end.toDate()).format("h:mm A")}
               </Descriptions.Item>
               <Descriptions.Item label="Price per Ticket">
                 ${event.event_price}
