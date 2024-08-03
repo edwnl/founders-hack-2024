@@ -10,11 +10,6 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.4.0",
-    "@genkit-ai/ai": "^0.5.9",
-    "@genkit-ai/core": "^0.5.9",
-    "@genkit-ai/dotprompt": "^0.5.9",
-    "@genkit-ai/flow": "^0.5.9",
-    "@genkit-ai/googleai": "^0.5.9",
     "antd": "^5.19.4",
     "antd-img-crop": "^4.22.0",
     "express": "^4.19.2",

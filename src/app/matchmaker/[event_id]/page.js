@@ -4,58 +4,32 @@
 import {useEffect, useState} from "react";
 import {Button, Card, Col, Row, Statistic, Tag} from "antd";
 import {CalendarOutlined, CloseOutlined, HeartOutlined, TeamOutlined,} from "@ant-design/icons";
-import {callMatchFinderFlow} from "@/app/genkit";
-import {findMatches} from "@/service/findMatches";
+import {getAttendeesOfAnEvent} from "@/app/matchmaker/[event_id]/service";
+import Image from "next/image";
 
 const MatchmakerEventPage = ({ params }) => {
   const [attendees, setAttendees] = useState([]);
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
-
+  const eventID = params.event_id;
   useEffect(() => {
+    // Fetch attendees for the event
+    const getData = async () => {
+      const data = await getAttendeesOfAnEvent(eventID);
+      setAttendees(data);
+    }
+
+    getData().catch(console.error)
     // Fetch recommendation
-    (async () => {
-      const matches = await findMatches("1");
-      console.log("matches")
-      console.log( matches);
-    })()
-
-    // Fetch attendees data (using dummy data for now)
-    const dummyAttendees = [
-      {
-        _id: "1",
-        email: "john@example.com",
-        matchmaker_pictures: [
-          "https://picsum.photos/400/600?random=1",
-          "https://picsum.photos/400/600?random=2",
-          "https://picsum.photos/400/600?random=3",
-          "https://picsum.photos/400/600?random=4",
-          "https://picsum.photos/400/600?random=5",
-          "https://picsum.photos/400/600?random=6",
-        ],
-        matchmaker_prompts: {
-          "What's your ideal first date?":
-              "A cozy coffee shop and a long walk in the park.",
-          "Your go-to karaoke song?": "Don't Stop Believin' by Journey",
-          "Beach or mountains?":
-              "Mountains all the way! I love hiking and the fresh air.",
-        },
-        matchmaker_bio:
-            "Adventure seeker and coffee enthusiast. Always up for trying new restaurants and exploring hidden gems in the city.",
-        matchmaker_name: "John Doe",
-        matchmaker_preference: "FRIENDS",
-        age: 28,
-        location: "New York, NY",
-        events_attended: 5,
-        matching_events: 2,
-      },
-      // Add more dummy attendees here
-    ];
-    setAttendees(dummyAttendees);
-
+    // (async () => {
+    //   // "use server";
+    //   // const matches = await findMatches("1");
+    //   console.log("matches")
+    //   console.log( matches);
+    // })()
   }, []);
 
   const handleLike = () => {
-    // Implement like logic here
+    // TODO: Implement like logic here
    };
 
   const handleDislike = () => {
@@ -100,24 +74,30 @@ const MatchmakerEventPage = ({ params }) => {
             </Card>
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[0]}
               alt="Profile 1"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[1]}
               alt="Profile 2"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[2]}
               alt="Profile 3"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
@@ -139,24 +119,30 @@ const MatchmakerEventPage = ({ params }) => {
             </Card>
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[3]}
               alt="Profile 4"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[4]}
               alt="Profile 5"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[5]}
               alt="Profile 6"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>

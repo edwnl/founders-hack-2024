@@ -196,15 +196,16 @@ export async function findMatches(id) {
     messages: [{
       role: "user",
       content: [
-        {type: "text", text: `from this dataset of fellow users who will be attending the same event, please recommend 3 best suitable match for user ${id}. Please format your response to JSON format and only output their id` +
+        {type: "text", text: `from this dataset of fellow users who will be attending the same event, please recommend 3 best suitable match for user ${id}. Please format your response to JSON format and only output their id, the similarity score in percentage, and the reasons why they might be similar` +
         `The data is formatted in JSON:${data}`},
       ]
     }
     ],
     model: "gpt-4o-mini",
-    max_tokens: 20,
+
   });
   const response =completion.choices[0].message.content.slice(7,-3);
+
   return JSON.parse(response)
 
 }
