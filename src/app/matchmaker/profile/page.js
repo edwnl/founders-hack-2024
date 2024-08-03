@@ -1,7 +1,7 @@
 // app/matchmaker/profile/OrganizerDashboard.js
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Button,
@@ -81,18 +81,40 @@ const MatchmakerProfilePage = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingField, setEditingField] = useState(null);
 
+  useEffect(() => {
+    console.log("Profile state updated:", profile);
+  }, [profile]);
+
   const handleProfileChange = (field, value) => {
-    setProfile((prevProfile) => ({ ...prevProfile, [field]: value }));
+    console.log(
+      `handleProfileChange called with field: ${field}, value:`,
+      value,
+    );
+    setProfile((prevProfile) => {
+      const newProfile = { ...prevProfile, [field]: value };
+      console.log("Previous profile:", prevProfile);
+      console.log("New profile:", newProfile);
+      return newProfile;
+    });
   };
 
-  const handlePromptChange = (index, question, answer) => {
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      matchmaker_prompts: {
-        ...prevProfile.matchmaker_prompts,
-        [question]: answer,
-      },
-    }));
+  const handlePromptChange = (promptKey, value) => {
+    console.log(
+      `handlePromptChange called with promptKey: ${promptKey}, value:`,
+      value,
+    );
+    setProfile((prevProfile) => {
+      const newProfile = {
+        ...prevProfile,
+        matchmaker_prompts: {
+          ...prevProfile.matchmaker_prompts,
+          [promptKey]: value,
+        },
+      };
+      console.log("Previous profile:", prevProfile);
+      console.log("New profile:", newProfile);
+      return newProfile;
+    });
   };
 
   const handleImageUpload = (index, info) => {
@@ -121,7 +143,7 @@ const MatchmakerProfilePage = () => {
   const renderEditModal = () => {
     let content;
     switch (editingField) {
-      case "personalInfo":
+      case "Personal Info":
         content = (
           <>
             <Input
@@ -171,9 +193,9 @@ const MatchmakerProfilePage = () => {
           />
         );
         break;
-      case "prompt1":
-      case "prompt2":
-      case "prompt3":
+      case "Prompt 1":
+      case "Prompt 2":
+      case "Prompt 3":
         const index = parseInt(editingField.slice(-1)) - 1;
         content = (
           <>
@@ -262,7 +284,7 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("personalInfo")}
+                onClick={() => showEditModal("Personal Info")}
               />
               <Title level={4}>{profile.matchmaker_name}</Title>
               <p>Age: {moment().diff(profile.birthdate, "years")}</p>
@@ -301,7 +323,7 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("prompt1")}
+                onClick={() => showEditModal("Prompt 1")}
               />
               <Title level={5}>
                 {Object.keys(profile.matchmaker_prompts)[0]}
@@ -314,7 +336,7 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("prompt2")}
+                onClick={() => showEditModal("Prompt 2")}
               />
               <Title level={5}>
                 {Object.keys(profile.matchmaker_prompts)[1]}
@@ -339,7 +361,7 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("prompt3")}
+                onClick={() => showEditModal("Prompt 3")}
               />
               <Title level={5}>
                 {Object.keys(profile.matchmaker_prompts)[2]}
