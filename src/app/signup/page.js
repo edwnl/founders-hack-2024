@@ -42,7 +42,6 @@ function SignUpPage() {
         email: values.email,
         firstName: values.firstName,
         lastName: values.lastName,
-        userType: registrationMode,
       });
 
       if (result.success) {

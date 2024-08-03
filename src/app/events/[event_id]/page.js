@@ -29,8 +29,7 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import { withGuard } from "@/components/GuardRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import { db } from "../../../../firebase/config";
-import { collection, doc, getDoc, updateDoc, increment } from "firebase/firestore";
+import { buyTickets, fetchEvent } from "@/app/events/[event_id]/actions";
 
 function EventDetails() {
   const [event, setEvent] = useState(null);
@@ -43,26 +42,19 @@ function EventDetails() {
   const event_id = params.event_id;
   const { user } = useAuth();
 
+  async function getEventData() {
+    setLoading(true);
+    const result = await fetchEvent(event_id);
+    if (result.success) {
+      setEvent(result.data);
+    } else {
+      message.error(result.error);
+    }
+    setLoading(false);
+  }
+
   useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const eventRef = doc(db, "event", event_id);
-        const eventSnap = await getDoc(eventRef);
-
-        if (eventSnap.exists()) {
-          setEvent(eventSnap.data());
-        } else {
-          message.error("Event not found");
-        }
-      } catch (error) {
-        message.error("Error fetching event data");
-        console.error("Error: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvent();
+    getEventData();
   }, [event_id]);
 
   const showModal = () => setIsModalVisible(true);
@@ -80,20 +72,14 @@ function EventDetails() {
         // Simulating payment process
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // Update user's tickets
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, {
-          [`tickets.${event_id}`]: increment(ticketQuantity),
-        });
+        const result = await buyTickets(event_id, user.uid, ticketQuantity);
 
-        // Update event attendees
-        const eventRef = doc(db, "event", event_id);
-        await updateDoc(eventRef, {
-          attendees: increment(ticketQuantity),
-        });
-
-        message.success(`Successfully purchased ${ticketQuantity} ticket(s)!`);
-        setCheckoutStep(2);
+        if (result.success) {
+          message.success(result.message);
+          setCheckoutStep(2);
+        } else {
+          message.error(result.error);
+        }
       } catch (error) {
         message.error("Error processing the transaction.");
         console.error("Error: ", error);
@@ -128,6 +114,19 @@ function EventDetails() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
+        <div className={"flex"}>
+          <h1 className="text-3xl font-bold text-foreground mb-6">
+            View Event
+          </h1>
+          {user && user.uid === event.organizer_id && (
+            <Button
+              onClick={() => router.push(`/events/${event_id}/edit`)}
+              className={"ml-4"}
+            >
+              Edit Event
+            </Button>
+          )}
+        </div>
         <Card
           cover={
             <div className="relative w-full h-96">
@@ -150,12 +149,12 @@ function EventDetails() {
           <Descriptions bordered>
             <Descriptions.Item label="Date" span={3}>
               <CalendarOutlined className="mr-2" />
-              {dayjs(event.event_start.toDate()).format("MMMM D, YYYY")}
+              {dayjs(event.event_start).format("MMMM D, YYYY")}
             </Descriptions.Item>
             <Descriptions.Item label="Time" span={3}>
               <CalendarOutlined className="mr-2" />
-              {dayjs(event.event_start.toDate()).format("h:mm A")} -{" "}
-              {dayjs(event.event_end.toDate()).format("h:mm A")}
+              {dayjs(event.event_start).format("h:mm A")} -{" "}
+              {dayjs(event.event_end).format("h:mm A")}
             </Descriptions.Item>
             <Descriptions.Item label="Location" span={3}>
               <EnvironmentOutlined className="mr-2" />
@@ -181,7 +180,7 @@ function EventDetails() {
             <Col span={8}>
               <Statistic
                 title="Available Tickets"
-                value={event.available_tickets}
+                value={event.event_capacity}
                 prefix={<TagOutlined />}
               />
             </Col>
@@ -222,11 +221,11 @@ function EventDetails() {
                 {event.event_name}
               </Descriptions.Item>
               <Descriptions.Item label="Date">
-                {dayjs(event.event_start.toDate()).format("MMMM D, YYYY")}
+                {dayjs(event.event_start).format("MMMM D, YYYY")}
               </Descriptions.Item>
               <Descriptions.Item label="Time">
-                {dayjs(event.event_start.toDate()).format("h:mm A")} -{" "}
-                {dayjs(event.event_end.toDate()).format("h:mm A")}
+                {dayjs(event.event_start).format("h:mm A")} -{" "}
+                {dayjs(event.event_end).format("h:mm A")}
               </Descriptions.Item>
               <Descriptions.Item label="Price per Ticket">
                 ${event.event_price}
