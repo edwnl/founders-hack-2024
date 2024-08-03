@@ -1,4 +1,4 @@
-// app/page.js
+// app/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,11 +9,12 @@ import { Montserrat } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { withGuard } from "@/components/GuardRoute";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 const { Title, Text } = Typography;
 
-export default function LoginPage() {
+function LoginPage() {
   const [form] = Form.useForm();
   const [loginMode, setLoginMode] = useState("user");
   const auth = getAuth();
@@ -106,3 +107,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default withGuard(LoginPage, { requireNonAuth: true });

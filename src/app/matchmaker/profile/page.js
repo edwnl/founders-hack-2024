@@ -1,4 +1,4 @@
-// app/matchmaker/profile/page.js
+// app/matchmaker/profile/OrganizerDashboard.js
 "use client";
 
 import { useState } from "react";
@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import moment from "moment";
 import ImgCrop from "antd-img-crop";
+import { withGuard } from "@/components/GuardRoute";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -386,4 +387,7 @@ const MatchmakerProfilePage = () => {
   );
 };
 
-export default MatchmakerProfilePage;
+export default withGuard(MatchmakerProfilePage, {
+  requireAuth: true,
+  requiredMode: "user",
+});

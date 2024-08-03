@@ -1,4 +1,4 @@
-// app/events/user-dashboard/page.js
+// app/events/user-dashboard/OrganizerDashboard.js
 "use client";
 
 import React, { useState } from "react";
@@ -11,11 +11,12 @@ import {
   DollarOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
-import { dummyUserEvents } from "@/app/events/user-dashboard/dummy-data";
+import { dummyUserEvents } from "@/components/dummy-user-data";
+import { withGuard } from "@/components/GuardRoute";
 
 const { Text } = Typography;
 
-export default function UserDashboard() {
+function UserDashboard() {
   const [matchMakerProfiles, setMatchMakerProfiles] = useState({});
 
   const toggleMatchMaker = (eventId) => {
@@ -110,3 +111,4 @@ export default function UserDashboard() {
     </div>
   );
 }
+export default UserDashboard;
