@@ -12,6 +12,7 @@
     "@ant-design/icons": "^5.4.0",
     "antd": "^5.19.4",
     "antd-img-crop": "^4.22.0",
+    "dayjs": "^1.11.12",
     "firebase": "^10.12.4",
     "firebase-admin": "^12.3.0",
     "moment": "^2.30.1",
