@@ -1,4 +1,3 @@
-// app/events/[event_id]/edit/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,10 +14,10 @@ import {
   Descriptions,
   Row,
   Col,
+  Spin,
 } from "antd";
 import {
   EditOutlined,
-  CalendarOutlined,
   EnvironmentOutlined,
   DollarOutlined,
   TeamOutlined,
@@ -27,7 +26,11 @@ import {
 import Image from "next/image";
 import dayjs from "dayjs";
 import { withGuard } from "@/components/GuardRoute";
+import { createEvent, loadEvent, updateEvent, uploadImage } from "./actions";
 import NO_IMAGE_LANDSCAPE from "../../../../public/no-image-landscape.png";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../../firebase/config";
+import { useAuth } from "@/contexts/AuthContext";
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
@@ -35,57 +38,113 @@ function EditEvent() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [imageUrl, setImageUrl] = useState(NO_IMAGE_LANDSCAPE);
+  const [newImage, setNewImage] = useState(null);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const event_id = params.event_id;
+  const [isNewEvent, setNewEvent] = useState(event_id === "new");
 
   useEffect(() => {
-    if (event_id && event_id !== "new") {
-      // Simulating API call to get event data
-      setTimeout(() => {
-        const dummyEvent = {
-          id: event_id,
-          event_name: "Sample Event",
-          event_description:
-            "This is a sample event description. It's going to be an amazing event you don't want to miss!",
-          event_location: "New York, NY",
-          event_date_time: [
-            dayjs().add(1, "month"),
-            dayjs().add(1, "month").add(3, "hour"),
-          ],
-          event_price: 50,
-          event_capacity: 100,
-          available_tickets: 50,
-        };
-        form.setFieldsValue(dummyEvent);
-        setImageUrl(dummyEvent.event_picture || NO_IMAGE_LANDSCAPE);
-        setLoading(false);
-      }, 1000);
-    } else {
+    async function fetchEvent() {
+      if (!isNewEvent) {
+        const result = await loadEvent(event_id);
+        if (result.success) {
+          const eventData = result.data;
+
+          form.setFieldsValue({
+            ...eventData,
+            event_date_time: [
+              dayjs(eventData.event_start),
+              dayjs(eventData.event_end),
+            ],
+          });
+
+          setImageUrl(eventData.event_picture || NO_IMAGE_LANDSCAPE);
+        } else {
+          setError(result.error);
+        }
+      }
       setLoading(false);
     }
-  }, [event_id, form]);
+    fetchEvent();
+  }, [event_id, form, isNewEvent]);
 
-  const onFinish = (values) => {
-    console.log("Form values:", values);
-    message.success("Event saved successfully!");
-    router.push("/dashboard");
+  const onFinish = async (values) => {
+    setLoading(true);
+    try {
+      let uploadedImageUrl = imageUrl;
+
+      if (newImage) {
+        const storageRef = ref(
+          storage,
+          `event_images/${Date.now()}_${newImage.name}`,
+        );
+        await uploadBytes(storageRef, newImage);
+        uploadedImageUrl = await getDownloadURL(storageRef);
+      }
+
+      const eventData = {
+        ...values,
+        event_picture: uploadedImageUrl,
+        event_start: values.event_date_time[0].toISOString(),
+        event_end: values.event_date_time[1].toISOString(),
+        organizer_id: user.uid,
+      };
+
+      let result;
+      if (isNewEvent) {
+        result = await createEvent(eventData);
+      } else {
+        result = await updateEvent(event_id, eventData);
+      }
+
+      if (result.success) {
+        if (isNewEvent) setNewEvent(false);
+        message.success(result.message);
+      } else {
+        message.error(result.error);
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      message.error(
+        `Failed to ${isNewEvent ? "create" : "update"} event: ${error.message}`,
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImageUpload = (info) => {
-    if (info.file.status === "done") {
-      setImageUrl(info.file.response.url);
-      message.success("Image uploaded successfully");
-    } else if (info.file.status === "error") {
-      message.error("Image upload failed");
+    const file = info.file.originFileObj;
+    if (file) {
+      // Create a temporary URL for preview
+      const previewUrl = URL.createObjectURL(file);
+      setImageUrl(previewUrl);
+
+      // Store the file for later upload
+      setNewImage(file);
+
+      message.success(
+        "Image selected successfully. It will be uploaded when you save the changes.",
+      );
     }
   };
+
+  if (loading) {
+    return <Spin className={"mx-auto my-auto"} spinning={loading} />;
+  }
+
+  if (error) {
+    return <Card className={"mx-auto my-auto text-md"}>{error}</Card>;
+  }
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold text-foreground mb-6">
-          {event_id === "new" ? "Create New Event" : "Edit Event"}
+          {isNewEvent ? "Create a new Event" : "Edit Event"}
         </h1>
         <Form
           form={form}
@@ -105,8 +164,12 @@ function EditEvent() {
                 <Upload
                   name="event_picture"
                   showUploadList={false}
+                  customRequest={({ file, onSuccess }) => {
+                    setTimeout(() => {
+                      onSuccess("ok");
+                    }, 0);
+                  }}
                   onChange={handleImageUpload}
-                  action="/api/upload" // Replace with your actual upload endpoint
                 >
                   <Button
                     icon={<EditOutlined />}
@@ -177,7 +240,7 @@ function EditEvent() {
             </Descriptions>
 
             <Row gutter={16} className="mt-6">
-              <Col span={8}>
+              <Col span={12}>
                 <Form.Item
                   name="event_price"
                   label="Ticket Price ($)"
@@ -196,7 +259,7 @@ function EditEvent() {
                   />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={12}>
                 <Form.Item
                   name="event_capacity"
                   label="Event Capacity"
@@ -204,24 +267,6 @@ function EditEvent() {
                     {
                       required: true,
                       message: "Please input the event capacity!",
-                    },
-                  ]}
-                >
-                  <InputNumber
-                    min={1}
-                    prefix={<TeamOutlined />}
-                    className="w-full"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  name="available_tickets"
-                  label="Available Tickets"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input the available tickets!",
                     },
                   ]}
                 >
@@ -242,7 +287,7 @@ function EditEvent() {
               className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 w-full"
               size="large"
             >
-              {event_id === "new" ? "Create Event" : "Save Changes"}
+              {isNewEvent ? "Create Event" : "Save Changes"}
             </Button>
           </Form.Item>
         </Form>
