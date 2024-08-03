@@ -11,33 +11,54 @@ import {
   Button,
   Upload,
   message,
+  Card,
+  Descriptions,
+  Row,
+  Col,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  CalendarOutlined,
+  EnvironmentOutlined,
+  DollarOutlined,
+  TeamOutlined,
+  TagOutlined,
+} from "@ant-design/icons";
+import Image from "next/image";
+import dayjs from "dayjs";
 import { withGuard } from "@/components/GuardRoute";
-
+import NO_IMAGE_LANDSCAPE from "../../../../public/no-image-landscape.png";
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
 function EditEvent() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
+  const [imageUrl, setImageUrl] = useState(NO_IMAGE_LANDSCAPE);
   const router = useRouter();
   const params = useParams();
   const event_id = params.event_id;
 
   useEffect(() => {
-    console.log(event_id);
     if (event_id && event_id !== "new") {
       // Simulating API call to get event data
       setTimeout(() => {
         const dummyEvent = {
+          id: event_id,
           event_name: "Sample Event",
-          event_description: "This is a sample event description.",
+          event_description:
+            "This is a sample event description. It's going to be an amazing event you don't want to miss!",
           event_location: "New York, NY",
+          event_date_time: [
+            dayjs().add(1, "month"),
+            dayjs().add(1, "month").add(3, "hour"),
+          ],
           event_price: 50,
           event_capacity: 100,
+          available_tickets: 50,
         };
         form.setFieldsValue(dummyEvent);
+        setImageUrl(dummyEvent.event_picture || NO_IMAGE_LANDSCAPE);
         setLoading(false);
       }, 1000);
     } else {
@@ -49,6 +70,15 @@ function EditEvent() {
     console.log("Form values:", values);
     message.success("Event saved successfully!");
     router.push("/dashboard");
+  };
+
+  const handleImageUpload = (info) => {
+    if (info.file.status === "done") {
+      setImageUrl(info.file.response.url);
+      message.success("Image uploaded successfully");
+    } else if (info.file.status === "error") {
+      message.error("Image upload failed");
+    }
   };
 
   return (
@@ -63,93 +93,154 @@ function EditEvent() {
           onFinish={onFinish}
           disabled={loading}
         >
-          <Form.Item
-            name="event_name"
-            label="Event Name"
-            rules={[
-              { required: true, message: "Please input the event name!" },
-            ]}
+          <Card
+            cover={
+              <div className="relative w-full h-96">
+                <Image
+                  src={imageUrl}
+                  alt="Event cover"
+                  fill
+                  className="object-cover rounded-t-lg"
+                />
+                <Upload
+                  name="event_picture"
+                  showUploadList={false}
+                  onChange={handleImageUpload}
+                  action="/api/upload" // Replace with your actual upload endpoint
+                >
+                  <Button
+                    icon={<EditOutlined />}
+                    className="absolute bottom-4 right-4 bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                  >
+                    Edit Image
+                  </Button>
+                </Upload>
+              </div>
+            }
           >
-            <Input />
-          </Form.Item>
+            <Form.Item
+              name="event_name"
+              label="Event Name"
+              rules={[
+                { required: true, message: "Please input the event name!" },
+              ]}
+            >
+              <Input size="large" />
+            </Form.Item>
 
-          <Form.Item
-            name="event_description"
-            label="Event Description"
-            rules={[
-              {
-                required: true,
-                message: "Please input the event description!",
-              },
-            ]}
-          >
-            <TextArea rows={4} />
-          </Form.Item>
+            <Form.Item
+              name="event_description"
+              label="Event Description"
+              rules={[
+                {
+                  required: true,
+                  message: "Please input the event description!",
+                },
+              ]}
+            >
+              <TextArea rows={4} />
+            </Form.Item>
 
-          <Form.Item
-            name="event_location"
-            label="Event Location"
-            rules={[
-              { required: true, message: "Please input the event location!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
+            <Descriptions bordered>
+              <Descriptions.Item label="Date & Time" span={3}>
+                <Form.Item
+                  name="event_date_time"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please select the event date and time!",
+                    },
+                  ]}
+                  noStyle
+                >
+                  <RangePicker
+                    showTime
+                    format="YYYY-MM-DD HH:mm:ss"
+                    className="w-full"
+                  />
+                </Form.Item>
+              </Descriptions.Item>
+              <Descriptions.Item label="Location" span={3}>
+                <Form.Item
+                  name="event_location"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the event location!",
+                    },
+                  ]}
+                  noStyle
+                >
+                  <Input prefix={<EnvironmentOutlined />} />
+                </Form.Item>
+              </Descriptions.Item>
+            </Descriptions>
 
-          <Form.Item
-            name="event_date_time"
-            label="Event Date and Time"
-            rules={[
-              {
-                required: true,
-                message: "Please select the event date and time!",
-              },
-            ]}
-          >
-            <RangePicker showTime format="YYYY-MM-DD HH:mm:ss" />
-          </Form.Item>
+            <Row gutter={16} className="mt-6">
+              <Col span={8}>
+                <Form.Item
+                  name="event_price"
+                  label="Ticket Price ($)"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the ticket price!",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={0}
+                    step={0.01}
+                    prefix={<DollarOutlined />}
+                    className="w-full"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  name="event_capacity"
+                  label="Event Capacity"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the event capacity!",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={1}
+                    prefix={<TeamOutlined />}
+                    className="w-full"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  name="available_tickets"
+                  label="Available Tickets"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the available tickets!",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={0}
+                    prefix={<TagOutlined />}
+                    className="w-full"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
 
-          <Form.Item
-            name="event_price"
-            label="Ticket Price ($)"
-            rules={[
-              { required: true, message: "Please input the ticket price!" },
-            ]}
-          >
-            <InputNumber min={0} step={0.01} />
-          </Form.Item>
-
-          <Form.Item
-            name="event_capacity"
-            label="Event Capacity"
-            rules={[
-              { required: true, message: "Please input the event capacity!" },
-            ]}
-          >
-            <InputNumber min={1} />
-          </Form.Item>
-
-          <Form.Item
-            name="event_picture"
-            label="Event Picture"
-            valuePropName="fileList"
-            getValueFromEvent={(e) => {
-              if (Array.isArray(e)) {
-                return e;
-              }
-              return e && e.fileList;
-            }}
-          >
-            <Upload name="event_picture" listType="picture" maxCount={1}>
-              <Button icon={<UploadOutlined />}>Upload Event Picture</Button>
-            </Upload>
-          </Form.Item>
-
-          <Form.Item>
+          <Form.Item className="mt-6">
             <Button
               type="primary"
               htmlType="submit"
-              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 w-full"
+              size="large"
             >
               {event_id === "new" ? "Create Event" : "Save Changes"}
             </Button>
