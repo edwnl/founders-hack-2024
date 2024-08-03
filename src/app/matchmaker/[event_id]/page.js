@@ -1,20 +1,24 @@
 // app/matchmaker/[event-id]/page.js
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, Button, Row, Col, Tag, Statistic } from "antd";
-import {
-  HeartOutlined,
-  CloseOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
+import {useEffect, useState} from "react";
+import {Button, Card, Col, Row, Statistic, Tag} from "antd";
+import {CalendarOutlined, CloseOutlined, HeartOutlined, TeamOutlined,} from "@ant-design/icons";
+import {callMatchFinderFlow} from "@/app/genkit";
+import {findMatches} from "@/service/findMatches";
 
 const MatchmakerEventPage = ({ params }) => {
   const [attendees, setAttendees] = useState([]);
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
 
   useEffect(() => {
+    // Fetch recommendation
+    (async () => {
+      const matches = await findMatches("1");
+      console.log("matches")
+      console.log( matches);
+    })()
+
     // Fetch attendees data (using dummy data for now)
     const dummyAttendees = [
       {
@@ -30,13 +34,13 @@ const MatchmakerEventPage = ({ params }) => {
         ],
         matchmaker_prompts: {
           "What's your ideal first date?":
-            "A cozy coffee shop and a long walk in the park.",
+              "A cozy coffee shop and a long walk in the park.",
           "Your go-to karaoke song?": "Don't Stop Believin' by Journey",
           "Beach or mountains?":
-            "Mountains all the way! I love hiking and the fresh air.",
+              "Mountains all the way! I love hiking and the fresh air.",
         },
         matchmaker_bio:
-          "Adventure seeker and coffee enthusiast. Always up for trying new restaurants and exploring hidden gems in the city.",
+            "Adventure seeker and coffee enthusiast. Always up for trying new restaurants and exploring hidden gems in the city.",
         matchmaker_name: "John Doe",
         matchmaker_preference: "FRIENDS",
         age: 28,
@@ -47,12 +51,12 @@ const MatchmakerEventPage = ({ params }) => {
       // Add more dummy attendees here
     ];
     setAttendees(dummyAttendees);
+
   }, []);
 
   const handleLike = () => {
     // Implement like logic here
-    setCurrentAttendeeIndex((prevIndex) => prevIndex + 1);
-  };
+   };
 
   const handleDislike = () => {
     // Implement dislike logic here
