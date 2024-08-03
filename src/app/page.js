@@ -17,10 +17,8 @@ export default function LandingPage() {
 
   const renderAuthButtons = () => {
     if (user) {
-      const dashboardLink =
-        userMode === "organizer" ? "/organizer-dashboard" : "/user-dashboard";
       return (
-        <Link href={dashboardLink}>
+        <Link href={"/dashboard"}>
           <Button
             type="primary"
             icon={<DashboardOutlined />}

@@ -275,7 +275,7 @@ function EventDetails() {
               </Button>
             </Card>
             <div className="flex justify-between">
-              <Button onClick={() => router.push("/events/user-dashboard")}>
+              <Button onClick={() => router.push("/dashboard")}>
                 Go to Dashboard
               </Button>
               <Button onClick={handleCancel}>Close</Button>

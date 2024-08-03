@@ -32,11 +32,7 @@ function LoginPage() {
       message.success("Logged in successfully");
       localStorage.setItem("userType", loginMode);
       updateUserMode(loginMode);
-      router.push(
-        loginMode === "user"
-          ? "/events/user-dashboard"
-          : "/events/organizer-dashboard",
-      );
+      router.push("/dashboard");
     } catch (error) {
       message.error(error.message);
     }

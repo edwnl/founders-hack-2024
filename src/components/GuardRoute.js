@@ -30,11 +30,7 @@ export function withGuard(WrappedComponent, options = {}) {
       if (requireAuth && !user) {
         redirect("/login");
       } else if (requireNonAuth && user) {
-        redirect(
-          userMode === "organizer"
-            ? "/events/organizer-dashboard"
-            : "/events/user-dashboard",
-        );
+        redirect("/dashboard");
       } else if (requiredMode && user && userMode !== requiredMode) {
         timeoutId = setTimeout(() => {
           redirect(

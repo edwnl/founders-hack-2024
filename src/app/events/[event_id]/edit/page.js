@@ -48,7 +48,7 @@ function EditEvent() {
   const onFinish = (values) => {
     console.log("Form values:", values);
     message.success("Event saved successfully!");
-    router.push("/events/organizer-dashboard");
+    router.push("/dashboard");
   };
 
   return (
