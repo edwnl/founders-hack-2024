@@ -10,9 +10,9 @@ import {
   DashboardOutlined,
 } from "@ant-design/icons";
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-export default function LandingPage() {
+function LandingPageContent() {
   const { user, userMode } = useAuth();
 
   const renderAuthButtons = () => {
@@ -68,5 +68,13 @@ export default function LandingPage() {
       </p>
       <Space size="small">{renderAuthButtons()}</Space>
     </div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <AuthProvider>
+      <LandingPageContent />
+    </AuthProvider>
   );
 }

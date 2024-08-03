@@ -1,56 +1,34 @@
-"use client";
-
-import { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "../../firebase/config";
-import { onAuthStateChanged } from "firebase/auth";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../../firebase/config'; // Adjust this import based on your Firebase setup
 
 const AuthContext = createContext();
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [userMode, setUserMode] = useState("user"); // Default to "user"
+  const [userMode, setUserMode] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        // If user is logged in, get the mode from localStorage
-        const storedMode = localStorage.getItem("userType");
-        setUserMode(storedMode || "user");
+        setUser(user);
+        // Determine user mode (you might fetch this from a database)
+        setUserMode('user'); // or 'organizer' based on your logic
       } else {
-        // If user is logged out, reset to default
-        setUserMode("user");
+        setUser(null);
+        setUserMode(null);
       }
-      setLoading(false);
     });
 
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  // Function to update user mode
-  const updateUserMode = (newMode) => {
-    console.log("Updating user mode to:", newMode);
-    setUserMode(newMode);
-    localStorage.setItem("userType", newMode);
-  };
-
-  const value = {
-    user,
-    loading,
-    userMode,
-    updateUserMode,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, userMode }}>
+      {children}
     </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
 }

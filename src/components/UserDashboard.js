@@ -1,7 +1,7 @@
 // app/events/user-dashboard/OrganizerDashboard.js
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, List, Switch, Card, Typography, Space } from "antd";
 import Link from "next/link";
 import {
@@ -13,11 +13,23 @@ import {
 } from "@ant-design/icons";
 import { dummyUserEvents } from "@/components/dummy-user-data";
 import { withGuard } from "@/components/GuardRoute";
+import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
 
 const { Text } = Typography;
 
 function UserDashboard() {
   const [matchMakerProfiles, setMatchMakerProfiles] = useState({});
+  const { user, userMode } = useAuth(); // Use the useAuth hook
+
+  useEffect(() => {
+    if (!user) {
+      console.log("Not logged in");
+      // You might want to redirect to a login page here
+    } else {
+      console.log(user.uid); // user id
+      console.log(userMode); // 'user' or 'organizer'
+    }
+  }, [user, userMode]);
 
   const toggleMatchMaker = (eventId) => {
     setMatchMakerProfiles((prev) => ({
@@ -26,11 +38,16 @@ function UserDashboard() {
     }));
   };
 
+  if (!user) {
+    return <div>Please log in to view your dashboard</div>;
+  }
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
+          <Text>Welcome, {user.uid}</Text>
         </div>
         <List
           grid={{
@@ -111,4 +128,5 @@ function UserDashboard() {
     </div>
   );
 }
+
 export default UserDashboard;
