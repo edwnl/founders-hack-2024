@@ -1,8 +1,8 @@
 // app/events/organizer-dashboard/page.js
 "use client";
 
-import React from "react";
-import { Button, List, Card, Typography, Space } from "antd";
+import React, { useState } from "react";
+import { Button, List, Card, Typography, Space, Modal } from "antd";
 import Link from "next/link";
 import {
   CalendarOutlined,
@@ -12,23 +12,52 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { dummyEvents } from "@/app/events/organizer-dashboard/dummy-data";
+import { createNewEvent } from "@/app/events/actions";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
 
 const { Text } = Typography;
 
 export default function OrganizerDashboard() {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const router = useRouter();
+  const { user } = useAuth(); // Use the useAuth hook to get the current user
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleCreateEvent = async () => {
+    setIsModalVisible(false);
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+    const result = await createNewEvent(user.uid); // Pass the user ID to the server action
+    if (result.success) {
+      router.push(`/events/${result.eventId}/edit`);
+    } else {
+      // Handle error (e.g., show an error message)
+      console.error("Failed to create event:", result.error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
-          <Link href={"/events/new/edit"}>
-            <Button
-              type="primary"
-              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-            >
-              Create New Event
-            </Button>
-          </Link>
+          <Button
+            type="primary"
+            className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+            onClick={showModal}
+          >
+            Create New Event
+          </Button>
         </div>
         <List
           grid={{
@@ -94,6 +123,16 @@ export default function OrganizerDashboard() {
           )}
         />
       </div>
+      <Modal
+        title="Create New Event"
+        visible={isModalVisible}
+        onOk={handleCreateEvent}
+        onCancel={handleCancel}
+        okText="Create"
+        cancelText="Cancel"
+      >
+        <p>Are you sure you want to create a new event?</p>
+      </Modal>
     </div>
   );
 }
