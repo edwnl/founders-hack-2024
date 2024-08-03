@@ -43,6 +43,17 @@ function EventDetails() {
   const event_id = params.event_id;
   const { user } = useAuth();
 
+  async function getEventData() {
+    setLoading(true);
+    const result = await fetchEvent(event_id);
+    if (result.success) {
+      setEvent(result.data);
+    } else {
+      message.error(result.error);
+    }
+    setLoading(false);
+  }
+
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -100,7 +111,6 @@ function EventDetails() {
       }
     }
   };
-
   const goToMatchmaking = () => {
     router.push(`/matchmaker/${event_id}`);
   };
@@ -128,6 +138,19 @@ function EventDetails() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
+        <div className={"flex"}>
+          <h1 className="text-3xl font-bold text-foreground mb-6">
+            View Event
+          </h1>
+          {user && user.uid === event.organizer_id && (
+            <Button
+              onClick={() => router.push(`/events/${event_id}/edit`)}
+              className={"ml-4"}
+            >
+              Edit Event
+            </Button>
+          )}
+        </div>
         <Card
           cover={
             <div className="relative w-full h-96">
@@ -181,7 +204,7 @@ function EventDetails() {
             <Col span={8}>
               <Statistic
                 title="Available Tickets"
-                value={event.available_tickets}
+                value={event.event_capacity}
                 prefix={<TagOutlined />}
               />
             </Col>
