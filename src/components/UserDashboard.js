@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, List, Switch, Card, Typography, Space } from "antd";
+import { Button, List, Switch, Card, Typography, Space, Spin } from "antd";
 import Link from "next/link";
 import {
   CalendarOutlined,
@@ -11,25 +11,43 @@ import {
   DollarOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
-import { dummyUserEvents } from "@/components/dummy-user-data";
 import { withGuard } from "@/components/GuardRoute";
-import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
+import { useAuth } from "@/contexts/AuthContext";
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/config'; // Adjust this import based on your Firebase setup
 
 const { Text } = Typography;
 
 function UserDashboard() {
   const [matchMakerProfiles, setMatchMakerProfiles] = useState({});
-  const { user, userMode } = useAuth(); // Use the useAuth hook
+  const [userEvents, setUserEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user, userMode } = useAuth();
 
   useEffect(() => {
-    if (!user) {
-      console.log("Not logged in");
-      // You might want to redirect to a login page here
-    } else {
-      console.log(user.uid); // user id
-      console.log(userMode); // 'user' or 'organizer'
+    async function fetchUserEvents() {
+      if (user) {
+        setLoading(true);
+        const eventsRef = collection(db, 'event');
+        const q = query(eventsRef, where("matchmaker_attendees", "array-contains", user.uid));
+        
+        try {
+          const querySnapshot = await getDocs(q);
+          const events = [];
+          querySnapshot.forEach((doc) => {
+            events.push({ id: doc.id, ...doc.data() });
+          });
+          setUserEvents(events);
+        } catch (error) {
+          console.error("Error fetching user events: ", error);
+        } finally {
+          setLoading(false);
+        }
+      }
     }
-  }, [user, userMode]);
+
+    fetchUserEvents();
+  }, [user]);
 
   const toggleMatchMaker = (eventId) => {
     setMatchMakerProfiles((prev) => ({
@@ -40,6 +58,10 @@ function UserDashboard() {
 
   if (!user) {
     return <div>Please log in to view your dashboard</div>;
+  }
+
+  if (loading) {
+    return <Spin size="large" />;
   }
 
   return (
@@ -59,7 +81,7 @@ function UserDashboard() {
             xl: 3,
             xxl: 3,
           }}
-          dataSource={dummyUserEvents}
+          dataSource={userEvents}
           renderItem={(event) => (
             <List.Item>
               <Card
@@ -73,14 +95,14 @@ function UserDashboard() {
                   />
                 }
                 actions={[
-                  <Link key="view" href={`/events/${event._id}`}>
+                  <Link key="view" href={`/events/${event.id}`}>
                     <Button>View Event</Button>
                   </Link>,
                   <Link
                     key="matchmaker"
-                    href={`/events/${event._id}/matchmaker`}
+                    href={`/events/${event.id}/matchmaker`}
                   >
-                    <Button disabled={!matchMakerProfiles[event._id]}>
+                    <Button disabled={!matchMakerProfiles[event.id]}>
                       MatchMaker
                     </Button>
                   </Link>,
@@ -96,11 +118,11 @@ function UserDashboard() {
                       </Space>
                       <Space>
                         <CalendarOutlined />
-                        <Text>{event.event_start.toLocaleDateString()}</Text>
+                        <Text>{new Date(event.event_start).toLocaleDateString()}</Text>
                       </Space>
                       <Space>
                         <ClockCircleOutlined />
-                        <Text>{`${event.event_start.toLocaleTimeString()} - ${event.event_end.toLocaleTimeString()}`}</Text>
+                        <Text>{`${new Date(event.event_start).toLocaleTimeString()}`}</Text>
                       </Space>
                       <Space>
                         <DollarOutlined />
@@ -108,13 +130,13 @@ function UserDashboard() {
                       </Space>
                       <Space>
                         <IdcardOutlined />
-                        <Text>Your Tickets: {event.user_tickets}</Text>
+                        <Text>Your Tickets: 1</Text>
                       </Space>
                       <Space>
                         <Text>Show in Match Maker:</Text>
                         <Switch
-                          checked={matchMakerProfiles[event._id]}
-                          onChange={() => toggleMatchMaker(event._id)}
+                          checked={matchMakerProfiles[event.id]}
+                          onChange={() => toggleMatchMaker(event.id)}
                         />
                       </Space>
                     </Space>
