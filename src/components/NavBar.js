@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Layout, Menu, Button, message, Modal, Tag, Space } from "antd";
@@ -45,14 +45,10 @@ const NavBar = () => {
   const handleSwitchConfirm = () => {
     const newUserMode = userMode === "user" ? "organizer" : "user";
     updateUserMode(newUserMode);
-    router.push(
-      newUserMode === "user"
-        ? "/events/user-dashboard"
-        : "/events/organizer-dashboard",
-    );
     setIsModalVisible(false);
     setMobileMenuVisible(false);
     message.success(`Switched to ${newUserMode} mode`);
+    router.push("/dashboard");
   };
 
   const handleSwitchCancel = () => {
@@ -65,7 +61,7 @@ const NavBar = () => {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
-        href: "/events/user-dashboard",
+        href: "/dashboard",
       },
       {
         key: "profile",
@@ -91,7 +87,7 @@ const NavBar = () => {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
-        href: "/events/organizer-dashboard",
+        href: "/dashboard",
       },
       {
         key: "create",

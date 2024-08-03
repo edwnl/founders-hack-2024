@@ -1,4 +1,4 @@
-// app/matchmaker/chats/page.js
+// app/matchmaker/chats/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,6 +14,7 @@ import {
   Divider,
 } from "antd";
 import { CloseOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
+import { withGuard } from "@/components/GuardRoute";
 
 const MatchmakerChatsPage = () => {
   const [matches, setMatches] = useState([]);
@@ -398,4 +399,7 @@ const MatchmakerChatsPage = () => {
   );
 };
 
-export default MatchmakerChatsPage;
+export default withGuard(MatchmakerChatsPage, {
+  requireAuth: true,
+  requiredMode: "user",
+});

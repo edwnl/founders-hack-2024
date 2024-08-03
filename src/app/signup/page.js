@@ -1,4 +1,4 @@
-// app/signup/page.js
+// app/signup/OrganizerDashboard.js
 "use client";
 
 import { useState } from "react";
@@ -18,11 +18,12 @@ import { Montserrat } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { createUserDocument } from "@/app/signup/actions";
+import { withGuard } from "@/components/GuardRoute";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 const { Title, Text } = Typography;
 
-export default function SignUpPage() {
+function SignUpPage() {
   const [form] = Form.useForm();
   const auth = getAuth();
   const router = useRouter();
@@ -135,3 +136,5 @@ export default function SignUpPage() {
     </div>
   );
 }
+
+export default withGuard(SignUpPage, { requireNonAuth: true });

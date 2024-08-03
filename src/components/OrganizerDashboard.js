@@ -1,4 +1,4 @@
-// app/events/organizer-dashboard/page.js
+// app/events/organizer-dashboard/OrganizerDashboard.js
 "use client";
 
 import React, { useState } from "react";
@@ -11,17 +11,18 @@ import {
   DollarOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { dummyEvents } from "@/app/events/organizer-dashboard/dummy-data";
+import { dummyEvents } from "@/components/dummy-organizer-data";
 import { createNewEvent } from "@/app/events/actions";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
+import { useAuth } from "@/contexts/AuthContext";
+import { withGuard } from "@/components/GuardRoute"; // Import the useAuth hook
 
 const { Text } = Typography;
 
-export default function OrganizerDashboard() {
+function OrganizerDashboard() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const router = useRouter();
-  const { user } = useAuth(); // Use the useAuth hook to get the current user
+  const { user, userMode } = useAuth(); // Use the useAuth hook to get the current user
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -33,6 +34,10 @@ export default function OrganizerDashboard() {
 
   const handleCreateEvent = async () => {
     setIsModalVisible(false);
+    console.log(userMode);
+
+    return;
+
     if (!user) {
       console.error("User not authenticated");
       return;
@@ -136,3 +141,5 @@ export default function OrganizerDashboard() {
     </div>
   );
 }
+
+export default OrganizerDashboard;

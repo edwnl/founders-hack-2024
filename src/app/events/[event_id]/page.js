@@ -1,4 +1,4 @@
-// app/events/[event-id]/page.js
+// app/events/[event-id]/OrganizerDashboard.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -29,8 +29,9 @@ import {
 } from "@ant-design/icons";
 import Image from "next/image";
 import dayjs from "dayjs";
+import { withGuard } from "@/components/GuardRoute";
 
-export default function EventDetails() {
+function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -285,3 +286,5 @@ export default function EventDetails() {
     </div>
   );
 }
+
+export default withGuard(EventDetails, { requireAuth: true });
