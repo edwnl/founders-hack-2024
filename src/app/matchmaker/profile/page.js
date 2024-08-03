@@ -12,6 +12,10 @@ import {
   Typography,
   message,
   Upload,
+  DatePicker,
+  Modal,
+  Form,
+  Spin,
 } from "antd";
 import {
   CalendarOutlined,
@@ -29,6 +33,7 @@ import {
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import ImgCrop from "antd-img-crop";
 import { storage } from "../../../../firebase/config";
+import { getAge } from "@/app/matchmaker/profile/ProfileHelpers";
 
 const { Title, Paragraph } = Typography;
 
@@ -37,6 +42,9 @@ const MatchmakerProfilePage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentEditField, setCurrentEditField] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [newImages, setNewImages] = useState([]);
+  const [dobModalVisible, setDobModalVisible] = useState(false);
+  const [selectedDOB, setSelectedDOB] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -45,7 +53,9 @@ const MatchmakerProfilePage = () => {
         const result = await loadMatchmakerProfile(user.uid);
         if (result.success) {
           setProfile(result.data);
-          console.log(result.data);
+          if (!result.data.date_of_birth) {
+            setDobModalVisible(true);
+          }
         } else {
           message.error("Failed to load profile: " + result.error);
         }
@@ -64,8 +74,6 @@ const MatchmakerProfilePage = () => {
     setModalVisible(false);
     setCurrentEditField(null);
   };
-
-  const [newImages, setNewImages] = useState([]);
 
   const renderImageUpload = (index) => (
     <ImgCrop
@@ -145,7 +153,10 @@ const MatchmakerProfilePage = () => {
       return;
     }
 
-    if (newImages.filter(Boolean).length === 0) {
+    if (
+      !profile.matchmaker_pictures ||
+      profile.matchmaker_pictures.filter(Boolean).length === 0
+    ) {
       message.error("Please upload at least one photo");
       return;
     }
@@ -160,17 +171,19 @@ const MatchmakerProfilePage = () => {
 
     try {
       setLoading(true);
-      const uploadPromises = newImages.map(async (file, index) => {
-        if (file) {
-          const storageRef = ref(
-            storage,
-            `profile_images/${user.uid}/${index}`,
-          );
-          await uploadBytes(storageRef, file);
-          return getDownloadURL(storageRef);
-        }
-        return profile.matchmaker_pictures?.[index] || null;
-      });
+      const uploadPromises = profile.matchmaker_pictures.map(
+        async (picture, index) => {
+          if (newImages[index]) {
+            const storageRef = ref(
+              storage,
+              `profile_images/${user.uid}/${index}`,
+            );
+            await uploadBytes(storageRef, newImages[index]);
+            return getDownloadURL(storageRef);
+          }
+          return picture;
+        },
+      );
 
       const uploadedImageUrls = await Promise.all(uploadPromises);
 
@@ -217,7 +230,7 @@ const MatchmakerProfilePage = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Spin className="mx-auto my-auto" />;
   }
 
   return (
@@ -232,6 +245,11 @@ const MatchmakerProfilePage = () => {
                 onClick={() => handleEdit("personalInfo")}
               />
               <Title level={4}>{profile.matchmaker_name || "Your Name"}</Title>
+              <p>
+                {profile.date_of_birth
+                  ? `Age: ${getAge(profile.date_of_birth)}`
+                  : "Age not set"}
+              </p>
               <p>{profile.location || "Select City"}</p>
               {profile.matchmaker_preference ? (
                 <Tag
@@ -390,6 +408,46 @@ const MatchmakerProfilePage = () => {
         initialValues={profile}
         onUpdate={handleProfileUpdate}
       />
+      <Modal
+        title="Set Your Date of Birth"
+        open={dobModalVisible}
+        onOk={async () => {
+          if (selectedDOB) {
+            const dobTimestamp = Timestamp.fromDate(selectedDOB.toDate());
+            const result = await updateDateOfBirth(user.uid, dobTimestamp);
+            if (result.success) {
+              setProfile((prev) => ({ ...prev, date_of_birth: dobTimestamp }));
+              setDobModalVisible(false);
+              message.success("Date of birth updated successfully");
+            } else {
+              message.error(result.error);
+            }
+          } else {
+            message.error("Please select your date of birth");
+          }
+        }}
+        onCancel={() => {}} // Empty function to prevent closing
+        closable={false}
+        maskClosable={false}
+      >
+        <p>
+          We need your date of birth to ensure you are eligible for our service
+          and to provide you with age-appropriate matches. Please note that this
+          information cannot be changed later.
+        </p>
+        <Form.Item
+          name="date_of_birth"
+          label="Date of Birth"
+          rules={[
+            { required: true, message: "Please select your date of birth" },
+          ]}
+        >
+          <DatePicker
+            style={{ width: "100%" }}
+            onChange={(date) => setSelectedDOB(date)}
+          />
+        </Form.Item>
+      </Modal>
     </div>
   );
 };
