@@ -149,12 +149,12 @@ function EventDetails() {
           <Descriptions bordered>
             <Descriptions.Item label="Date" span={3}>
               <CalendarOutlined className="mr-2" />
-              {dayjs(event.event_start.toDate()).format("MMMM D, YYYY")}
+              {dayjs(event.event_start).format("MMMM D, YYYY")}
             </Descriptions.Item>
             <Descriptions.Item label="Time" span={3}>
               <CalendarOutlined className="mr-2" />
-              {dayjs(event.event_start.toDate()).format("h:mm A")} -{" "}
-              {dayjs(event.event_end.toDate()).format("h:mm A")}
+              {dayjs(event.event_start).format("h:mm A")} -{" "}
+              {dayjs(event.event_end).format("h:mm A")}
             </Descriptions.Item>
             <Descriptions.Item label="Location" span={3}>
               <EnvironmentOutlined className="mr-2" />
@@ -221,11 +221,11 @@ function EventDetails() {
                 {event.event_name}
               </Descriptions.Item>
               <Descriptions.Item label="Date">
-                {dayjs(event.event_start.toDate()).format("MMMM D, YYYY")}
+                {dayjs(event.event_start).format("MMMM D, YYYY")}
               </Descriptions.Item>
               <Descriptions.Item label="Time">
-                {dayjs(event.event_start.toDate()).format("h:mm A")} -{" "}
-                {dayjs(event.event_end.toDate()).format("h:mm A")}
+                {dayjs(event.event_start).format("h:mm A")} -{" "}
+                {dayjs(event.event_end).format("h:mm A")}
               </Descriptions.Item>
               <Descriptions.Item label="Price per Ticket">
                 ${event.event_price}
