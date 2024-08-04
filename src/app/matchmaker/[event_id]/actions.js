@@ -11,6 +11,12 @@ import {
 } from "firebase/firestore";
 import { db } from "../../../../firebase/config";
 
+/**
+ * Fetch match maker's profile
+ * @param eventId
+ * @param currentUserId
+ * @returns {Promise<*>}
+ */
 export async function fetchMatchmakerProfiles(eventId, currentUserId) {
   try {
     const eventDoc = await getDoc(doc(db, "event", eventId));

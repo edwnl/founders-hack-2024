@@ -19,6 +19,11 @@ if (!getApps().length) {
   });
 }
 
+/**
+ * Get user's matches
+ * @param userId
+ * @returns {Promise<Awaited<{name, lastMessage: string|undefined, id: *, avatar}|null>[]>}
+ */
 export async function getMatchesForUser(userId) {
   try {
     const userRef = doc(db, "users", userId);
@@ -59,6 +64,13 @@ export async function getMatchesForUser(userId) {
   }
 }
 
+/**
+ * Send message to other user
+ * @param chatId
+ * @param senderId
+ * @param content
+ * @returns {Promise<string>}
+ */
 export async function sendMessage(chatId, senderId, content) {
   if (!senderId) {
     throw new Error("User ID is required");

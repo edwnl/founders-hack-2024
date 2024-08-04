@@ -11,6 +11,11 @@ import {
   endAt,
 } from "firebase/firestore";
 
+/**
+ * Gets all events from searching enquiry
+ * @param searchTerm
+ * @returns {Promise<(*&{event_start: *, event_end: *, _id: *})[]>}
+ */
 export async function getAllEvents(searchTerm = "") {
   try {
     let eventsQuery;

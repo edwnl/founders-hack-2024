@@ -20,17 +20,18 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-## Learn More
+# Made with love <3
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+# Challenges
+## 1. Recommending matches
+- One of our biggest challenge is how can it recommend other attendees of an event and how they can be matched. 
+  . At first, we developed a machine learning algorithm to check for the similarity from the prompts. However, 
+  it means that we need to create another server which can run Python script. 
+- After that, we remembered that OpenAI is perfect at analysing data. Therefore, we utilises OpenAI to analyse their 
+  profiles and gives out reasons why they might be a match. Users can use that as a ice breaker and create 
+  meaningful conversation
+## 2. Chat
+- One of an important aspects of the app is chat function. When first thought using conventional database should 
+  work well. However, we realised the response time is slow and some of the messages are not updated correctly.
+- By utilising Firebase Real-time Database, not only it preserves the quality of the chat, but provides an excellent 
+  reliability, even if the database are offline (as provided by google)
