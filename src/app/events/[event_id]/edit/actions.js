@@ -1,6 +1,13 @@
 "use server";
 
-import { addDoc, collection, doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { revalidatePath } from "next/cache";
 import { db, storage } from "../../../../../firebase/config";
@@ -19,6 +26,12 @@ export async function createEvent(eventData) {
       matchmaker_attendees: [],
       attendees: [],
       organizer_id: eventData.organizer_id, // Make sure to pass this from the client
+    });
+
+    // Update the user's organised_events field
+    const userRef = doc(db, "users", eventData.organizer_id);
+    await updateDoc(userRef, {
+      organised_events: arrayUnion(eventRef.id),
     });
 
     revalidatePath("/dashboard");

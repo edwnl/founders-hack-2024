@@ -13,6 +13,7 @@ import {
   MenuOutlined,
   InboxOutlined,
   UserSwitchOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import WhiteLogo from "../public/meetix-full-logo-white.svg";
 import { useRouter } from "next/navigation";
@@ -58,6 +59,12 @@ const NavBar = () => {
   const menuItems = {
     user: [
       {
+        key: "events",
+        icon: <TagOutlined />,
+        label: "Events",
+        href: "/events",
+      },
+      {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
@@ -83,6 +90,12 @@ const NavBar = () => {
       },
     ],
     organizer: [
+      {
+        key: "events",
+        icon: <TagOutlined />,
+        label: "Events",
+        href: "/events",
+      },
       {
         key: "dashboard",
         icon: <UserOutlined />,

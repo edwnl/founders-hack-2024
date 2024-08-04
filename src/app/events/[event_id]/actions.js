@@ -11,7 +11,7 @@ export async function fetchEvent(event_id) {
     if (eventSnap.exists()) {
       const eventData = eventSnap.data();
 
-      // Convert only event_start and event_end to ISO strings
+      // Convert event_start and event_end to ISO strings
       const convertedEventData = {
         ...eventData,
         event_start: eventData.event_start.toDate().toISOString(),
