@@ -1,4 +1,4 @@
-"use server"
+"use server";
 import OpenAI from "openai";
 
 // TODO: Implement getting data from server
@@ -187,25 +187,28 @@ const data = `
       "https://picsum.photos/id/1046/400"
     ]
   }
-]`
+]`;
 
-export async function findMatches(id) {
+export async function findMatches(id, id2) {
   const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
   const completion = await openai.chat.completions.create({
-    messages: [{
-      role: "user",
-      content: [
-        {type: "text", text: `from this dataset of fellow users who will be attending the same event, please recommend 3 best suitable match for user ${id}. Please format your response to JSON format and only output their id, the similarity score in percentage, and the reasons why they might be similar` +
-        `The data is formatted in JSON:${data}`},
-      ]
-    }
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text:
+              `from this dataset of fellow users who will be attending the same event, please tell me why the user ${id} matches with the ${id2}. Please format your response to JSON format and only output similarity score (in field 'sim-score') in percentage, and the reasons why they might be similar (in field 'reasons')` +
+              `The data is formatted in JSON:${data}`,
+          },
+        ],
+      },
     ],
     model: "gpt-4o-mini",
-
   });
-  const response =completion.choices[0].message.content.slice(7,-3);
+  const response = completion.choices[0].message.content.slice(7, -3);
 
-  return JSON.parse(response)
-
+  return JSON.parse(response);
 }

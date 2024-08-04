@@ -10,6 +10,8 @@ import {
   updateDoc,
   getDoc,
   doc,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 
 export async function getUserEvents(userId) {
@@ -62,24 +64,40 @@ export async function getUserEvents(userId) {
 export async function toggleMatchMaker(userId, eventId, isMatchMaker) {
   try {
     const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
+    const eventRef = doc(db, "event", eventId);
+
+    // Get user and event data
+    const [userSnap, eventSnap] = await Promise.all([
+      getDoc(userRef),
+      getDoc(eventRef),
+    ]);
 
     if (!userSnap.exists()) {
       return { success: false, error: "User not found" };
     }
 
-    const userData = userSnap.data();
-    let matchmakerTickets = userData.matchmaker?.matchmaker_tickets || [];
-
-    if (isMatchMaker) {
-      matchmakerTickets = [...new Set([...matchmakerTickets, eventId])];
-    } else {
-      matchmakerTickets = matchmakerTickets.filter((id) => id !== eventId);
+    if (!eventSnap.exists()) {
+      return { success: false, error: "Event not found" };
     }
 
-    await updateDoc(userRef, {
-      "matchmaker.matchmaker_tickets": matchmakerTickets,
-    });
+    // Prepare update operations
+    const userUpdate = {
+      "matchmaker.matchmaker_tickets": isMatchMaker
+        ? arrayUnion(eventId)
+        : arrayRemove(eventId),
+    };
+
+    const eventUpdate = {
+      matchmaker_attendees: isMatchMaker
+        ? arrayUnion(userId)
+        : arrayRemove(userId),
+    };
+
+    // Perform updates
+    await Promise.all([
+      updateDoc(userRef, userUpdate),
+      updateDoc(eventRef, eventUpdate),
+    ]);
 
     return { success: true };
   } catch (error) {
