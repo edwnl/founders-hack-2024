@@ -87,3 +87,45 @@ export async function toggleMatchMaker(userId, eventId, isMatchMaker) {
     throw error;
   }
 }
+
+export async function getOrganizerEvents(userId) {
+  try {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return { success: false, error: "User not found" };
+    }
+
+    const userData = userSnap.data();
+    const organizedEventIds = userData.organised_events || [];
+
+    const eventPromises = organizedEventIds.map(async (eventId) => {
+      const eventRef = doc(db, "event", eventId);
+      const eventSnap = await getDoc(eventRef);
+      if (eventSnap.exists()) {
+        const eventData = eventSnap.data();
+
+        // Convert Firestore timestamps to ISO strings
+        const convertedEventData = {
+          ...eventData,
+          event_start: eventData.event_start.toDate().toISOString(),
+          event_end: eventData.event_end.toDate().toISOString(),
+        };
+
+        return {
+          ...convertedEventData,
+          _id: eventSnap.id,
+          attendees: eventData.attendees || [],
+        };
+      }
+      return null;
+    });
+
+    const events = await Promise.all(eventPromises);
+    return events.filter((event) => event !== null);
+  } catch (error) {
+    console.error("Error fetching organizer events:", error);
+    throw error;
+  }
+}
