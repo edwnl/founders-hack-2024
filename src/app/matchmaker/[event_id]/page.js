@@ -4,12 +4,13 @@
 import {useEffect, useState} from "react";
 import {Button, Card, Col, Row, Statistic, Tag} from "antd";
 import {CalendarOutlined, CloseOutlined, HeartOutlined, TeamOutlined,} from "@ant-design/icons";
-import {getAttendeesOfAnEvent} from "@/app/matchmaker/[event_id]/service";
+import {addLikes, getAttendeesOfAnEvent} from "@/app/matchmaker/[event_id]/service";
 import Image from "next/image";
 
 const MatchmakerEventPage = ({ params }) => {
   const [attendees, setAttendees] = useState([]);
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
+  const [matched, setMatched] = useState(false);
   const eventID = params.event_id;
   useEffect(() => {
     // Fetch attendees for the event
@@ -28,8 +29,18 @@ const MatchmakerEventPage = ({ params }) => {
     // })()
   }, []);
 
-  const handleLike = () => {
+  const handleLike = async () => {
     // TODO: Implement like logic here
+    console.log("handleLike")
+    const matchingResult = await addLikes("7Wunj2kn2gAqncGV6yLl", currentAttendee.id);
+
+    console.log(matchingResult);
+    if (matchingResult === "matched") {
+      // Play screen animation
+      console.log(`matched with user ${currentAttendee.id}`);
+      setMatched(true);
+    }
+    // setCurrentAttendeeIndex((prevIndex) => prevIndex + 1);
    };
 
   const handleDislike = () => {
@@ -185,7 +196,9 @@ const MatchmakerEventPage = ({ params }) => {
           <Button
             shape="circle"
             icon={<HeartOutlined />}
-            onClick={handleLike}
+            onClick={async() => {
+              await handleLike();
+            }}
             size="large"
             className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
           />
