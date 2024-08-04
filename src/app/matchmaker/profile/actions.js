@@ -1,7 +1,7 @@
 // app/matchmaker/profile/actions.js
 
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db } from "../../../firebase/config";
+import { db } from "../../../../firebase/config";
 
 export async function loadMatchmakerProfile(userId) {
   try {

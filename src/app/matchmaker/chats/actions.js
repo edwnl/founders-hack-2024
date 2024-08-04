@@ -19,11 +19,6 @@ if (!getApps().length) {
   });
 }
 
-/**
- * Fetch matches for user
- * @param userId
- * @returns {Promise<Awaited<{name, lastMessage: string, id: *, avatar}|null>[]>}
- */
 export async function getMatchesForUser(userId) {
   try {
     const userRef = doc(db, "users", userId);
@@ -64,13 +59,6 @@ export async function getMatchesForUser(userId) {
   }
 }
 
-/**
- * Send a message to the conversation
- * @param chatId
- * @param senderId
- * @param content
- * @returns {Promise<string>}
- */
 export async function sendMessage(chatId, senderId, content) {
   if (!senderId) {
     throw new Error("User ID is required");
@@ -99,12 +87,6 @@ export async function getChatId(userId1, userId2) {
   return userId1 < userId2 ? `${userId1}_${userId2}` : `${userId2}_${userId1}`;
 }
 
-/**
- * Extract last message from users conversation
- * @param userId1
- * @param userId2
- * @returns {Promise<string>}
- */
 async function getLastMessage(userId1, userId2) {
   const chatId = await getChatId(userId1, userId2);
   const db = admin.database();
