@@ -3,6 +3,11 @@
 import { db } from "../../../../firebase/config";
 import { doc, getDoc, updateDoc, increment } from "firebase/firestore";
 
+/**
+ * Fetch events from event id
+ * @param event_id
+ * @returns {Promise<{success: boolean, error: string}|{data: {[p: string]: any, event_start: *, event_end: *}, success: boolean}>}
+ */
 export async function fetchEvent(event_id) {
   try {
     const eventRef = doc(db, "event", event_id);
@@ -28,6 +33,13 @@ export async function fetchEvent(event_id) {
   }
 }
 
+/**
+ * Buy ticket and
+ * @param event_id
+ * @param user_id
+ * @param ticketQuantity
+ * @returns {Promise<{success: boolean, error: string}|{success: boolean, message: string}>}
+ */
 export async function buyTickets(event_id, user_id, ticketQuantity) {
   try {
     // Update user's tickets

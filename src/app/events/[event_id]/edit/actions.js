@@ -12,6 +12,11 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { revalidatePath } from "next/cache";
 import { db, storage } from "../../../../../firebase/config";
 
+/**
+ * Create events and uploads to the database
+ * @param eventData
+ * @returns {Promise<{success: boolean, error: string}|{eventId: string, success: boolean, message: string}>}
+ */
 export async function createEvent(eventData) {
   try {
     const eventRef = await addDoc(collection(db, "event"), {
@@ -46,6 +51,11 @@ export async function createEvent(eventData) {
   }
 }
 
+/**
+ * Load event's data
+ * @param eventId
+ * @returns {Promise<{success: boolean, error: string}|{data: {[p: string]: any, event_start: *, event_end: *, id: string}, success: boolean}>}
+ */
 export async function loadEvent(eventId) {
   try {
     const eventRef = doc(db, "event", eventId);
@@ -87,6 +97,12 @@ export async function uploadImage(file) {
   }
 }
 
+/**
+ * Update event's details.
+ * @param eventId
+ * @param eventData
+ * @returns {Promise<{success: boolean, error: string}|{success: boolean, message: string}>}
+ */
 export async function updateEvent(eventId, eventData) {
   try {
     const eventRef = doc(db, "event", eventId);

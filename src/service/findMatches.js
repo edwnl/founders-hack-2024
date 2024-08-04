@@ -1,7 +1,7 @@
 "use server";
 import OpenAI from "openai";
 
-// TODO: Implement getting data from server
+// dummy data
 const data = `
 [
   {
@@ -189,6 +189,12 @@ const data = `
   }
 ]`;
 
+/**
+ * Enquire openAI for giving out reasons why they be a match
+ * @param id
+ * @param id2
+ * @returns {Promise<any>}
+ */
 export async function findMatches(id, id2) {
   const openai = new OpenAI(process.env.OPENAI_API_KEY);
 

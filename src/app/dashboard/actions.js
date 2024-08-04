@@ -14,6 +14,11 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 
+/**
+ * get events that user is registered
+ * @param userId
+ * @returns {Promise<{success: boolean, error: string}|Awaited<{[p: string]: any, event_start: *, event_end: *, user_tickets: *, _id: string, isMatchMaker}|null>[]>}
+ */
 export async function getUserEvents(userId) {
   try {
     const userRef = doc(db, "users", userId);
@@ -61,6 +66,13 @@ export async function getUserEvents(userId) {
   }
 }
 
+/**
+ * Enrolled into event's matchmaker service
+ * @param userId
+ * @param eventId
+ * @param isMatchMaker
+ * @returns {Promise<{success: boolean}|{success: boolean, error: string}>}
+ */
 export async function toggleMatchMaker(userId, eventId, isMatchMaker) {
   try {
     const userRef = doc(db, "users", userId);
@@ -105,6 +117,12 @@ export async function toggleMatchMaker(userId, eventId, isMatchMaker) {
     throw error;
   }
 }
+
+/**
+ * Get events that the user organises
+ * @param userId
+ * @returns {Promise<Awaited<{[p: string]: any, event_start: *, event_end: *, attendees, _id: string}|null>[]|{success: boolean, error: string}>}
+ */
 
 export async function getOrganizerEvents(userId) {
   try {
