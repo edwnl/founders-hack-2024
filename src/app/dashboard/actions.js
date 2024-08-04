@@ -10,10 +10,13 @@ import {
   updateDoc,
   getDoc,
   doc,
-  arrayUnion,
-  arrayRemove,
 } from "firebase/firestore";
 
+/**
+ * Getting all user's registered event
+ * @param userId
+ * @returns the events of the users
+ */
 export async function getUserEvents(userId) {
   try {
     const userRef = doc(db, "users", userId);
@@ -61,43 +64,34 @@ export async function getUserEvents(userId) {
   }
 }
 
+/**
+ * Enrolled into the Matchmaking of that event
+ * @param userId
+ * @param eventId
+ * @param isMatchMaker
+ * @returns {Promise<{success: boolean}|{success: boolean, error: string}>}
+ */
 export async function toggleMatchMaker(userId, eventId, isMatchMaker) {
   try {
     const userRef = doc(db, "users", userId);
-    const eventRef = doc(db, "event", eventId);
-
-    // Get user and event data
-    const [userSnap, eventSnap] = await Promise.all([
-      getDoc(userRef),
-      getDoc(eventRef),
-    ]);
-
+    const userSnap = await getDoc(userRef);
+    // Check if user is found
     if (!userSnap.exists()) {
       return { success: false, error: "User not found" };
     }
 
-    if (!eventSnap.exists()) {
-      return { success: false, error: "Event not found" };
+    const userData = userSnap.data();
+    let matchmakerTickets = userData.matchmaker?.matchmaker_tickets || [];
+
+    if (isMatchMaker) {
+      matchmakerTickets = [...new Set([...matchmakerTickets, eventId])];
+    } else {
+      matchmakerTickets = matchmakerTickets.filter((id) => id !== eventId);
     }
-
-    // Prepare update operations
-    const userUpdate = {
-      "matchmaker.matchmaker_tickets": isMatchMaker
-        ? arrayUnion(eventId)
-        : arrayRemove(eventId),
-    };
-
-    const eventUpdate = {
-      matchmaker_attendees: isMatchMaker
-        ? arrayUnion(userId)
-        : arrayRemove(userId),
-    };
-
-    // Perform updates
-    await Promise.all([
-      updateDoc(userRef, userUpdate),
-      updateDoc(eventRef, eventUpdate),
-    ]);
+    // Update the database
+    await updateDoc(userRef, {
+      "matchmaker.matchmaker_tickets": matchmakerTickets,
+    });
 
     return { success: true };
   } catch (error) {
@@ -106,6 +100,11 @@ export async function toggleMatchMaker(userId, eventId, isMatchMaker) {
   }
 }
 
+/**
+ * Get user's organised events
+ * @param userId
+ * @returns {Promise<Awaited<{[p: string]: any, event_start: *, event_end: *, attendees, _id: string}|null>[]|{success: boolean, error: string}>}
+ */
 export async function getOrganizerEvents(userId) {
   try {
     const userRef = doc(db, "users", userId);

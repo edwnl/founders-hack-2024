@@ -1,7 +1,7 @@
 // app/matchmaker/profile/EditModal.js
 import React, { useEffect } from "react";
 import { Modal, Form, Input, Select } from "antd";
-import { promptQuestions } from "@/app/matchmaker/profile/ProfileHelpers";
+import { promptQuestions } from "@/components/profile/ProfileHelpers";
 
 const { Option } = Select;
 

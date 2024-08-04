@@ -3,6 +3,11 @@
 import { db } from "../../../../firebase/config";
 import { doc, getDoc, updateDoc, increment } from "firebase/firestore";
 
+/**
+ * Fetch events details
+ * @param event_id
+ * @returns {Promise<{success: boolean, error: string}|{data: {[p: string]: any, event_start: *, event_end: *}, success: boolean}>}
+ */
 export async function fetchEvent(event_id) {
   try {
     const eventRef = doc(db, "event", event_id);

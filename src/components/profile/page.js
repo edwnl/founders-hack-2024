@@ -30,11 +30,11 @@ import {
   loadMatchmakerProfile,
   saveMatchmakerProfile,
   updateDateOfBirth,
-} from "@/app/matchmaker/profile/actions";
+} from "@/components/profile/actions";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import ImgCrop from "antd-img-crop";
-import { storage } from "../../../../firebase/config";
-import { getAge } from "@/app/matchmaker/profile/ProfileHelpers";
+import { storage } from "../../../firebase/config";
+import { getAge } from "@/components/profile/ProfileHelpers";
 import { Timestamp } from "firebase/firestore";
 
 const { Title, Paragraph } = Typography;

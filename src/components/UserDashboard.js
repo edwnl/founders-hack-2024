@@ -87,7 +87,10 @@ function UserDashboard() {
                   <Link key="view" href={`/events/${event._id}`}>
                     <Button>View Event</Button>
                   </Link>,
-                  <Link key="matchmaker" href={`/matchmaker/${event._id}/`}>
+                  <Link
+                    key="matchmaker"
+                    href={`matchmaker/${event._id}`}
+                  >
                     <Button disabled={!event.isMatchMaker}>MatchMaker</Button>
                   </Link>,
                 ]}

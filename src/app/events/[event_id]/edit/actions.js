@@ -12,6 +12,11 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { revalidatePath } from "next/cache";
 import { db, storage } from "../../../../../firebase/config";
 
+/**
+ * Helper for create event
+ * @param eventData
+ * @returns {Promise<{success: boolean, error: string}|{eventId: string, success: boolean, message: string}>}
+ */
 export async function createEvent(eventData) {
   try {
     const eventRef = await addDoc(collection(db, "event"), {
@@ -46,6 +51,11 @@ export async function createEvent(eventData) {
   }
 }
 
+/**
+ * Load events data
+ * @param eventId
+ * @returns {Promise<{success: boolean, error: string}|{data: {[p: string]: any, event_start: *, event_end: *, id: string}, success: boolean}>}
+ */
 export async function loadEvent(eventId) {
   try {
     const eventRef = doc(db, "event", eventId);
@@ -74,6 +84,11 @@ export async function loadEvent(eventId) {
   }
 }
 
+/**
+ * Helper function to upload image to the firebase
+ * @param file
+ * @returns {Promise<{success: boolean, error: string}|{success: boolean, url: string}>}
+ */
 export async function uploadImage(file) {
   try {
     const fileName = `event_images/${Date.now()}_${file.name}`;
@@ -87,6 +102,12 @@ export async function uploadImage(file) {
   }
 }
 
+/**
+ * update events details
+ * @param eventId
+ * @param eventData
+ * @returns {Promise<{success: boolean, error: string}|{success: boolean, message: string}>}
+ */
 export async function updateEvent(eventId, eventData) {
   try {
     const eventRef = doc(db, "event", eventId);
