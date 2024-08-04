@@ -1,59 +1,47 @@
-// app/matchmaker/[event-id]/OrganizerDashboard.js
+// app/matchmaker/[event-id]/page.js
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, Button, Row, Col, Tag, Statistic } from "antd";
-import {
-  HeartOutlined,
-  CloseOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
-import { withGuard } from "@/components/GuardRoute";
+import {useEffect, useState} from "react";
+import {Button, Card, Col, Row, Statistic, Tag} from "antd";
+import {CalendarOutlined, CloseOutlined, HeartOutlined, TeamOutlined,} from "@ant-design/icons";
+import {addLikes, getAttendeesOfAnEvent} from "@/app/matchmaker/[event_id]/service";
+import Image from "next/image";
 
 const MatchmakerEventPage = ({ params }) => {
   const [attendees, setAttendees] = useState([]);
   const [currentAttendeeIndex, setCurrentAttendeeIndex] = useState(0);
-
+  const [matched, setMatched] = useState(false);
+  const eventID = params.event_id;
   useEffect(() => {
-    // Fetch attendees data (using dummy data for now)
-    const dummyAttendees = [
-      {
-        _id: "1",
-        email: "john@example.com",
-        matchmaker_pictures: [
-          "https://picsum.photos/400/600?random=1",
-          "https://picsum.photos/400/600?random=2",
-          "https://picsum.photos/400/600?random=3",
-          "https://picsum.photos/400/600?random=4",
-          "https://picsum.photos/400/600?random=5",
-          "https://picsum.photos/400/600?random=6",
-        ],
-        matchmaker_prompts: {
-          "What's your ideal first date?":
-            "A cozy coffee shop and a long walk in the park.",
-          "Your go-to karaoke song?": "Don't Stop Believin' by Journey",
-          "Beach or mountains?":
-            "Mountains all the way! I love hiking and the fresh air.",
-        },
-        matchmaker_bio:
-          "Adventure seeker and coffee enthusiast. Always up for trying new restaurants and exploring hidden gems in the city.",
-        matchmaker_name: "John Doe",
-        matchmaker_preference: "FRIENDS",
-        age: 28,
-        location: "New York, NY",
-        events_attended: 5,
-        matching_events: 2,
-      },
-      // Add more dummy attendees here
-    ];
-    setAttendees(dummyAttendees);
+    // Fetch attendees for the event
+    const getData = async () => {
+      const data = await getAttendeesOfAnEvent(eventID);
+      setAttendees(data);
+    }
+
+    getData().catch(console.error)
+    // Fetch recommendation
+    // (async () => {
+    //   // "use server";
+    //   // const matches = await findMatches("1");
+    //   console.log("matches")
+    //   console.log( matches);
+    // })()
   }, []);
 
-  const handleLike = () => {
-    // Implement like logic here
-    setCurrentAttendeeIndex((prevIndex) => prevIndex + 1);
-  };
+  const handleLike = async () => {
+    // TODO: Implement like logic here
+    console.log("handleLike")
+    const matchingResult = await addLikes("7Wunj2kn2gAqncGV6yLl", currentAttendee.id);
+
+    console.log(matchingResult);
+    if (matchingResult === "matched") {
+      // Play screen animation
+      console.log(`matched with user ${currentAttendee.id}`);
+      setMatched(true);
+    }
+    // setCurrentAttendeeIndex((prevIndex) => prevIndex + 1);
+   };
 
   const handleDislike = () => {
     // Implement dislike logic here
@@ -97,24 +85,30 @@ const MatchmakerEventPage = ({ params }) => {
             </Card>
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[0]}
               alt="Profile 1"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[1]}
               alt="Profile 2"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[2]}
               alt="Profile 3"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
@@ -136,24 +130,30 @@ const MatchmakerEventPage = ({ params }) => {
             </Card>
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[3]}
               alt="Profile 4"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[4]}
               alt="Profile 5"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
-            <img
+            <Image
               src={currentAttendee.matchmaker_pictures[5]}
               alt="Profile 6"
               className="w-full h-[416px] object-cover rounded-lg"
+              width={400}
+              height={600}
             />
           </Col>
           <Col xs={24} md={8}>
@@ -196,7 +196,9 @@ const MatchmakerEventPage = ({ params }) => {
           <Button
             shape="circle"
             icon={<HeartOutlined />}
-            onClick={handleLike}
+            onClick={async() => {
+              await handleLike();
+            }}
             size="large"
             className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
           />
@@ -206,7 +208,4 @@ const MatchmakerEventPage = ({ params }) => {
   );
 };
 
-export default withGuard(MatchmakerEventPage, {
-  requireAuth: true,
-  requiredMode: "user",
-});
+export default MatchmakerEventPage;
