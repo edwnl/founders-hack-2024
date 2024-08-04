@@ -1,34 +1,74 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Layout, Menu, Button } from "antd";
+import { Layout, Menu, Button, message, Modal, Tag, Space } from "antd";
 import {
   UserOutlined,
   TeamOutlined,
-  CalendarOutlined,
   PlusCircleOutlined,
   LoginOutlined,
   LogoutOutlined,
   MenuOutlined,
   InboxOutlined,
+  UserSwitchOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import WhiteLogo from "../public/meetix-full-logo-white.svg";
+import { useRouter } from "next/navigation";
+import { signOut, getAuth } from "firebase/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { Header } = Layout;
 
 const NavBar = () => {
-  const [userState, setUserState] = useState("user"); // 'notLoggedIn', 'user', 'organizer'
+  const auth = getAuth();
+  const { user, userMode, updateUserMode } = useAuth();
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      message.success("Signed out successfully");
+      router.push("/login");
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const showSwitchModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleSwitchConfirm = () => {
+    const newUserMode = userMode === "user" ? "organizer" : "user";
+    updateUserMode(newUserMode);
+    setIsModalVisible(false);
+    setMobileMenuVisible(false);
+    message.success(`Switched to ${newUserMode} mode`);
+    router.push("/dashboard");
+  };
+
+  const handleSwitchCancel = () => {
+    setIsModalVisible(false);
+  };
 
   const menuItems = {
     user: [
       {
+        key: "events",
+        icon: <TagOutlined />,
+        label: "Events",
+        href: "/events",
+      },
+      {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
-        href: "/events/user-dashboard",
+        href: "/dashboard",
       },
       {
         key: "profile",
@@ -42,13 +82,25 @@ const NavBar = () => {
         label: "Chats",
         href: "/matchmaker/chats",
       },
+      {
+        key: "switch",
+        icon: <UserSwitchOutlined />,
+        label: "Switch to Organizer",
+        onClick: showSwitchModal,
+      },
     ],
     organizer: [
+      {
+        key: "events",
+        icon: <TagOutlined />,
+        label: "Events",
+        href: "/events",
+      },
       {
         key: "dashboard",
         icon: <UserOutlined />,
         label: "Dashboard",
-        href: "/events/organizer-dashboard",
+        href: "/dashboard",
       },
       {
         key: "create",
@@ -56,37 +108,50 @@ const NavBar = () => {
         label: "Create Event",
         href: "/events/new/edit",
       },
+      {
+        key: "switch",
+        icon: <UserSwitchOutlined />,
+        label: "Switch to User",
+        onClick: showSwitchModal,
+      },
     ],
   };
 
   const renderMenuItem = (item) => (
-    <Menu.Item key={item.key} icon={item.icon}>
-      <Link href={item.href} onClick={() => setMobileMenuVisible(false)}>
-        {item.label}
-      </Link>
+    <Menu.Item key={item.key} icon={item.icon} onClick={item.onClick}>
+      {item.href ? (
+        <Link href={item.href} onClick={() => setMobileMenuVisible(false)}>
+          {item.label}
+        </Link>
+      ) : (
+        item.label
+      )}
     </Menu.Item>
   );
 
   const renderAuthButton = () => {
-    if (userState === "notLoggedIn") {
+    if (!user) {
       return (
-        <>
+        <Space size="small" className={"ml-4"}>
+          <Link href="/signup">
+            <Button
+              className={"bg-white text-black hover:bg-gray-200"}
+              size="middle"
+              icon={<UserOutlined />}
+            >
+              Sign Up
+            </Button>
+          </Link>
           <Link href="/login">
-            <Button type="text" icon={<LoginOutlined />}>
+            <Button icon={<LoginOutlined />} size="middle">
               Login
             </Button>
           </Link>
-          <Link href="/signup">
-            <Button type="primary">Sign Up</Button>
-          </Link>
-        </>
+        </Space>
       );
     } else {
       return (
-        <Button
-          icon={<LogoutOutlined />}
-          onClick={() => setUserState("notLoggedIn")}
-        >
+        <Button icon={<LogoutOutlined />} onClick={handleSignOut}>
           Sign Out
         </Button>
       );
@@ -94,46 +159,77 @@ const NavBar = () => {
   };
 
   return (
-    <Header className="p-0 h-auto bg-black text-white">
-      <div className="flex justify-between items-center h-16 px-8">
-        <Link href="/" className="flex items-center">
-          <Image src={WhiteLogo} alt="Meetix Logo" width={120} height={40} />
-        </Link>
+    <>
+      <Header className="p-0 h-auto bg-black text-white">
+        <div className="flex justify-between items-center h-16 px-8">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <Image
+                src={WhiteLogo}
+                alt="Meetix Logo"
+                width={120}
+                height={40}
+              />
+            </Link>
+            {user && (
+              <Tag
+                color={userMode === "user" ? "blue" : "green"}
+                className="ml-2"
+              >
+                {userMode === "user" ? "User" : "Organizer"}
+              </Tag>
+            )}
+          </div>
 
-        {userState !== "notLoggedIn" && (
-          <div className="hidden md:block">
-            <Menu
-              className="border-none bg-transparent"
-              mode="horizontal"
-              disabledOverflow={true}
-              selectable={false}
-              selectedKeys={[]}
-            >
-              {menuItems[userState].map(renderMenuItem)}
+          {user && (
+            <div className="hidden lg:block">
+              <Menu
+                className="border-none bg-transparent"
+                mode="horizontal"
+                disabledOverflow={true}
+                selectable={false}
+                selectedKeys={[]}
+              >
+                {menuItems[userMode].map(renderMenuItem)}
+              </Menu>
+            </div>
+          )}
+
+          <div className="flex items-center">
+            {renderAuthButton()}
+            {user && (
+              <div className="lg:hidden ml-4">
+                <Button
+                  type="text"
+                  icon={<MenuOutlined />}
+                  onClick={() => setMobileMenuVisible(!mobileMenuVisible)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {mobileMenuVisible && user && (
+          <div className="lg:hidden">
+            <Menu mode="vertical" className="border-none bg-transparent">
+              {menuItems[userMode].map(renderMenuItem)}
             </Menu>
           </div>
         )}
+      </Header>
 
-        <div className="flex items-center">
-          {renderAuthButton()}
-          <div className="md:hidden ml-4">
-            <Button
-              type="text"
-              icon={<MenuOutlined />}
-              onClick={() => setMobileMenuVisible(!mobileMenuVisible)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {mobileMenuVisible && userState !== "notLoggedIn" && (
-        <div className="lg:hidden">
-          <Menu mode="vertical" className="border-none bg-transparent">
-            {menuItems[userState].map(renderMenuItem)}
-          </Menu>
-        </div>
-      )}
-    </Header>
+      <Modal
+        title="Switch User Type"
+        open={isModalVisible}
+        onOk={handleSwitchConfirm}
+        onCancel={handleSwitchCancel}
+      >
+        <p>
+          Are you sure you want to switch to{" "}
+          {userMode === "user" ? "Organizer" : "User"} mode?
+        </p>
+      </Modal>
+    </>
   );
 };
 

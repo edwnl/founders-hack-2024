@@ -1,4 +1,4 @@
-// app/events/user-dashboard/dummy-data.js
+// components/dummy-user-data.js
 
 export const dummyUserEvents = [
   {

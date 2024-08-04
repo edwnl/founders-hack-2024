@@ -1,8 +1,8 @@
-// app/events/user-dashboard/page.js
+// app/events/user-dashboard/UserDashboard.js
 "use client";
 
-import React, { useState } from "react";
-import { Button, List, Switch, Card, Typography, Space } from "antd";
+import React, { useState, useEffect } from "react";
+import { Button, List, Switch, Card, Typography, Space, message } from "antd";
 import Link from "next/link";
 import {
   CalendarOutlined,
@@ -11,18 +11,46 @@ import {
   DollarOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
-import { dummyUserEvents } from "@/app/events/user-dashboard/dummy-data";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserEvents, toggleMatchMaker } from "@/app/dashboard/actions";
 
 const { Text } = Typography;
 
-export default function UserDashboard() {
-  const [matchMakerProfiles, setMatchMakerProfiles] = useState({});
+function UserDashboard() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const toggleMatchMaker = (eventId) => {
-    setMatchMakerProfiles((prev) => ({
-      ...prev,
-      [eventId]: !prev[eventId],
-    }));
+  useEffect(() => {
+    if (user) {
+      fetchUserEvents();
+    }
+  }, [user]);
+
+  const fetchUserEvents = async () => {
+    try {
+      const userEvents = await getUserEvents(user.uid);
+      console.log(userEvents);
+      setEvents(userEvents);
+    } catch (error) {
+      message.error("Failed to fetch user events");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleMatchMaker = async (eventId, isMatchMaker) => {
+    try {
+      await toggleMatchMaker(user.uid, eventId, isMatchMaker);
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event._id === eventId ? { ...event, isMatchMaker } : event,
+        ),
+      );
+      message.success("MatchMaker status updated successfully");
+    } catch (error) {
+      message.error("Failed to update MatchMaker status");
+    }
   };
 
   return (
@@ -32,6 +60,7 @@ export default function UserDashboard() {
           <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
         </div>
         <List
+          loading={loading}
           grid={{
             gutter: 16,
             xs: 1,
@@ -41,7 +70,7 @@ export default function UserDashboard() {
             xl: 3,
             xxl: 3,
           }}
-          dataSource={dummyUserEvents}
+          dataSource={events}
           renderItem={(event) => (
             <List.Item>
               <Card
@@ -58,13 +87,8 @@ export default function UserDashboard() {
                   <Link key="view" href={`/events/${event._id}`}>
                     <Button>View Event</Button>
                   </Link>,
-                  <Link
-                    key="matchmaker"
-                    href={`/events/${event._id}/matchmaker`}
-                  >
-                    <Button disabled={!matchMakerProfiles[event._id]}>
-                      MatchMaker
-                    </Button>
+                  <Link key="matchmaker" href={`/matchmaker/${event._id}/`}>
+                    <Button disabled={!event.isMatchMaker}>MatchMaker</Button>
                   </Link>,
                 ]}
               >
@@ -78,11 +102,13 @@ export default function UserDashboard() {
                       </Space>
                       <Space>
                         <CalendarOutlined />
-                        <Text>{event.event_start.toLocaleDateString()}</Text>
+                        <Text>
+                          {new Date(event.event_start).toLocaleDateString()}
+                        </Text>
                       </Space>
                       <Space>
                         <ClockCircleOutlined />
-                        <Text>{`${event.event_start.toLocaleTimeString()} - ${event.event_end.toLocaleTimeString()}`}</Text>
+                        <Text>{`${new Date(event.event_start).toLocaleTimeString()} - ${new Date(event.event_end).toLocaleTimeString()}`}</Text>
                       </Space>
                       <Space>
                         <DollarOutlined />
@@ -95,8 +121,10 @@ export default function UserDashboard() {
                       <Space>
                         <Text>Show in Match Maker:</Text>
                         <Switch
-                          checked={matchMakerProfiles[event._id]}
-                          onChange={() => toggleMatchMaker(event._id)}
+                          checked={event.isMatchMaker}
+                          onChange={(checked) =>
+                            handleToggleMatchMaker(event._id, checked)
+                          }
                         />
                       </Space>
                     </Space>
@@ -110,3 +138,5 @@ export default function UserDashboard() {
     </div>
   );
 }
+
+export default UserDashboard;

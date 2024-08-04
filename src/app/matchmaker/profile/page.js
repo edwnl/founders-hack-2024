@@ -1,7 +1,7 @@
-// app/matchmaker/profile/page.js
+// app/matchmaker/profile/MatchmakerProfilePage.js
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Button,
@@ -10,225 +10,92 @@ import {
   Tag,
   Statistic,
   Typography,
-  Select,
-  Input,
-  DatePicker,
+  message,
   Upload,
+  DatePicker,
   Modal,
+  Form,
+  Spin,
 } from "antd";
 import {
   CalendarOutlined,
   TeamOutlined,
-  PlusOutlined,
   EditOutlined,
   SaveOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
-import moment from "moment";
+import EditModal from "./EditModal";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  loadMatchmakerProfile,
+  saveMatchmakerProfile,
+  updateDateOfBirth,
+} from "@/app/matchmaker/profile/actions";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import ImgCrop from "antd-img-crop";
+import { storage } from "../../../../firebase/config";
+import { getAge } from "@/app/matchmaker/profile/ProfileHelpers";
+import { Timestamp } from "firebase/firestore";
 
 const { Title, Paragraph } = Typography;
-const { Option } = Select;
-
-const prompts = [
-  "What's your ideal first date?",
-  "Your go-to karaoke song?",
-  "Beach or mountains?",
-  "What's your favorite travel memory?",
-  "If you could have dinner with anyone, who would it be?",
-  "What's your most unusual talent?",
-];
-
-const australianCities = [
-  "Sydney",
-  "Melbourne",
-  "Brisbane",
-  "Perth",
-  "Adelaide",
-  "Gold Coast",
-  "Newcastle",
-  "Canberra",
-  "Wollongong",
-  "Hobart",
-];
 
 const MatchmakerProfilePage = () => {
-  const [profile, setProfile] = useState({
-    matchmaker_name: "Your Name",
-    birthdate: moment().subtract(25, "years"),
-    location: "Sydney",
-    matchmaker_preference: "FRIENDS",
-    matchmaker_bio: "Write a short bio about yourself...",
-    matchmaker_pictures: [
-      "https://picsum.photos/400/400", // Example of an already uploaded image
-      null,
-      null,
-      null,
-      null,
-      null,
-    ],
-    matchmaker_prompts: {
-      "What's your ideal first date?":
-        "A cozy coffee shop and a walk in the park.",
-      "Your go-to karaoke song?": "Don't Stop Believin' by Journey",
-      "Beach or mountains?":
-        "Mountains all the way! Love the fresh air and hiking trails.",
-    },
-    events_attended: 0,
-    matching_events: 0,
-  });
+  const [profile, setProfile] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentEditField, setCurrentEditField] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [newImages, setNewImages] = useState([]);
+  const [dobModalVisible, setDobModalVisible] = useState(false);
+  const [selectedDOB, setSelectedDOB] = useState(null);
+  const { user } = useAuth();
 
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingField, setEditingField] = useState(null);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const result = await loadMatchmakerProfile(user.uid);
+        if (result.success) {
+          setProfile(result.data);
+          if (!result.data.date_of_birth) {
+            setDobModalVisible(true);
+          }
+        } else {
+          message.error("Failed to load profile: " + result.error);
+        }
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
-  const handleProfileChange = (field, value) => {
-    setProfile((prevProfile) => ({ ...prevProfile, [field]: value }));
+  const handleEdit = (field) => {
+    setCurrentEditField(field);
+    setModalVisible(true);
   };
 
-  const handlePromptChange = (index, question, answer) => {
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      matchmaker_prompts: {
-        ...prevProfile.matchmaker_prompts,
-        [question]: answer,
-      },
-    }));
-  };
-
-  const handleImageUpload = (index, info) => {
-    if (info.file.status === "done") {
-      const newPictures = [...profile.matchmaker_pictures];
-      newPictures[index] = info.file.response.url; // Assuming the server returns the image URL
-      handleProfileChange("matchmaker_pictures", newPictures);
-    }
-  };
-
-  const showEditModal = (field) => {
-    setEditingField(field);
-    setEditModalVisible(true);
-  };
-
-  const handleEditModalOk = () => {
-    setEditModalVisible(false);
-    setEditingField(null);
-  };
-
-  const handleEditModalCancel = () => {
-    setEditModalVisible(false);
-    setEditingField(null);
-  };
-
-  const renderEditModal = () => {
-    let content;
-    switch (editingField) {
-      case "personalInfo":
-        content = (
-          <>
-            <Input
-              placeholder="Name"
-              value={profile.matchmaker_name}
-              onChange={(e) =>
-                handleProfileChange("matchmaker_name", e.target.value)
-              }
-            />
-            <DatePicker
-              style={{ width: "100%", marginTop: "10px" }}
-              value={profile.birthdate}
-              onChange={(date) => handleProfileChange("birthdate", date)}
-            />
-            <Select
-              style={{ width: "100%", marginTop: "10px" }}
-              value={profile.location}
-              onChange={(value) => handleProfileChange("location", value)}
-            >
-              {australianCities.map((city) => (
-                <Option key={city} value={city}>
-                  {city}
-                </Option>
-              ))}
-            </Select>
-            <Select
-              style={{ width: "100%", marginTop: "10px" }}
-              value={profile.matchmaker_preference}
-              onChange={(value) =>
-                handleProfileChange("matchmaker_preference", value)
-              }
-            >
-              <Option value="FRIENDS">Looking for Friends</Option>
-              <Option value="MORE_THAN_FRIENDS">More than Friends</Option>
-            </Select>
-          </>
-        );
-        break;
-      case "bio":
-        content = (
-          <Input.TextArea
-            value={profile.matchmaker_bio}
-            onChange={(e) =>
-              handleProfileChange("matchmaker_bio", e.target.value)
-            }
-            rows={4}
-          />
-        );
-        break;
-      case "prompt1":
-      case "prompt2":
-      case "prompt3":
-        const index = parseInt(editingField.slice(-1)) - 1;
-        content = (
-          <>
-            <Select
-              style={{ width: "100%" }}
-              placeholder="Select a prompt"
-              value={Object.keys(profile.matchmaker_prompts)[index]}
-              onChange={(value) => handlePromptChange(index, value, "")}
-            >
-              {prompts.map((prompt) => (
-                <Option key={prompt} value={prompt}>
-                  {prompt}
-                </Option>
-              ))}
-            </Select>
-            <Input.TextArea
-              style={{ marginTop: "10px" }}
-              placeholder="Your answer"
-              value={Object.values(profile.matchmaker_prompts)[index] || ""}
-              onChange={(e) =>
-                handlePromptChange(
-                  index,
-                  Object.keys(profile.matchmaker_prompts)[index],
-                  e.target.value,
-                )
-              }
-            />
-          </>
-        );
-        break;
-      default:
-        content = null;
-    }
-
-    return (
-      <Modal
-        title={`Edit ${editingField}`}
-        open={editModalVisible}
-        onOk={handleEditModalOk}
-        onCancel={handleEditModalCancel}
-      >
-        {content}
-      </Modal>
-    );
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setCurrentEditField(null);
   };
 
   const renderImageUpload = (index) => (
-    <ImgCrop rotate aspect={1} modalTitle="Crop Image" shape="round">
+    <ImgCrop
+      rotationSlider
+      aspect={9 / 16}
+      modalTitle="Crop Image"
+      cropShape="rect"
+    >
       <Upload
         listType="picture-card"
         showUploadList={false}
-        action="/api/upload" // You need to implement this API endpoint
+        customRequest={({ file, onSuccess }) => {
+          setTimeout(() => {
+            onSuccess("ok");
+          }, 0);
+        }}
         onChange={(info) => handleImageUpload(index, info)}
-        className={`!important rounded-lg overflow-hidden`}
+        className="!important rounded-lg overflow-hidden"
       >
-        {profile.matchmaker_pictures[index] ? (
+        {profile.matchmaker_pictures && profile.matchmaker_pictures[index] ? (
           <img
             src={profile.matchmaker_pictures[index]}
             alt={`Profile ${index + 1}`}
@@ -252,6 +119,122 @@ const MatchmakerProfilePage = () => {
     </ImgCrop>
   );
 
+  const handleImageUpload = (index, info) => {
+    if (info.file.status === "done") {
+      const newImagesCopy = [...newImages];
+      newImagesCopy[index] = info.file.originFileObj;
+      setNewImages(newImagesCopy);
+
+      // Create a temporary URL for preview
+      const previewUrl = URL.createObjectURL(info.file.originFileObj);
+      setProfile((prev) => ({
+        ...prev,
+        matchmaker_pictures: [
+          ...(prev.matchmaker_pictures || []).slice(0, index),
+          previewUrl,
+          ...(prev.matchmaker_pictures || []).slice(index + 1),
+        ],
+      }));
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    console.log(profile);
+    const requiredFields = [
+      "matchmaker_name",
+      "location",
+      "matchmaker_preference",
+      "matchmaker_bio",
+    ];
+    const missingFields = requiredFields.filter((field) => !profile[field]);
+
+    if (missingFields.length > 0) {
+      message.error(
+        `Please fill in the following fields: ${missingFields.join(", ")}`,
+      );
+      return;
+    }
+
+    if (
+      !profile.matchmaker_pictures ||
+      profile.matchmaker_pictures.filter(Boolean).length === 0
+    ) {
+      message.error("Please upload at least one photo");
+      return;
+    }
+
+    if (
+      !profile.matchmaker_prompts ||
+      Object.keys(profile.matchmaker_prompts).length < 3
+    ) {
+      message.error("Please answer all three prompts");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const uploadPromises = profile.matchmaker_pictures.map(
+        async (picture, index) => {
+          if (newImages[index]) {
+            const storageRef = ref(
+              storage,
+              `profile_images/${user.uid}/${index}`,
+            );
+            await uploadBytes(storageRef, newImages[index]);
+            return getDownloadURL(storageRef);
+          }
+          return picture;
+        },
+      );
+
+      const uploadedImageUrls = await Promise.all(uploadPromises);
+
+      const updatedProfile = {
+        ...profile,
+        matchmaker_pictures: uploadedImageUrls.filter(Boolean),
+      };
+
+      if (user) {
+        const result = await saveMatchmakerProfile(user.uid, updatedProfile);
+        if (result.success) {
+          message.success("Profile saved successfully");
+          setProfile(updatedProfile);
+          setNewImages([]); // Clear the newImages array after successful save
+        } else {
+          message.error("Failed to save profile: " + result.error);
+        }
+      } else {
+        message.error("User not authenticated");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      message.error("An error occurred while saving the profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = (updatedData) => {
+    setProfile((prevProfile) => {
+      if (updatedData.promptKey && updatedData.promptData) {
+        // Handle prompt updates
+        return {
+          ...prevProfile,
+          matchmaker_prompts: {
+            ...prevProfile.matchmaker_prompts,
+            [updatedData.promptKey]: updatedData.promptData,
+          },
+        };
+      }
+      // Handle other updates
+      return { ...prevProfile, ...updatedData };
+    });
+  };
+
+  if (loading) {
+    return <Spin className="mx-auto my-auto" />;
+  }
+
   return (
     <div className="min-h-screen bg-background p-8 pb-24">
       <div className="max-w-5xl mx-auto">
@@ -261,28 +244,40 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("personalInfo")}
+                onClick={() => handleEdit("personalInfo")}
               />
-              <Title level={4}>{profile.matchmaker_name}</Title>
-              <p>Age: {moment().diff(profile.birthdate, "years")}</p>
-              <p>{profile.location}</p>
-              <Tag
-                color={
-                  profile.matchmaker_preference === "FRIENDS" ? "blue" : "pink"
-                }
-              >
-                {profile.matchmaker_preference === "FRIENDS"
-                  ? "Looking for Friends"
-                  : "More than Friends"}
-              </Tag>
+              <Title level={4}>{profile.matchmaker_name || "Your Name"}</Title>
+              <p>
+                {profile.date_of_birth
+                  ? `Age: ${getAge(profile.date_of_birth)}`
+                  : "Age not set"}
+              </p>
+              <p>{profile.location || "Select City"}</p>
+              {profile.matchmaker_preference ? (
+                <Tag
+                  color={
+                    profile.matchmaker_preference === "FRIENDS"
+                      ? "blue"
+                      : "pink"
+                  }
+                >
+                  {profile.matchmaker_preference === "FRIENDS"
+                    ? "Looking for Friends"
+                    : "More than Friends"}
+                </Tag>
+              ) : (
+                <Tag color="default">Select a Preference</Tag>
+              )}
             </Card>
             <Card className="mt-4 h-[200px] flex flex-col justify-center relative">
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("bio")}
+                onClick={() => handleEdit("matchmaker_bio")}
               />
-              <Paragraph>{profile.matchmaker_bio}</Paragraph>
+              <Paragraph>
+                {profile.matchmaker_bio || "Tell us about yourself..."}
+              </Paragraph>
             </Card>
           </Col>
           <Col xs={24} md={8}>
@@ -300,26 +295,38 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("prompt1")}
+                onClick={() => handleEdit("Prompt 1")}
               />
               <Title level={5}>
-                {Object.keys(profile.matchmaker_prompts)[0]}
+                {profile.matchmaker_prompts &&
+                profile.matchmaker_prompts["Prompt 1"]
+                  ? profile.matchmaker_prompts["Prompt 1"].question
+                  : "Select a question"}
               </Title>
               <Paragraph>
-                {Object.values(profile.matchmaker_prompts)[0]}
+                {profile.matchmaker_prompts &&
+                profile.matchmaker_prompts["Prompt 1"]
+                  ? profile.matchmaker_prompts["Prompt 1"].answer
+                  : "Your answer here..."}
               </Paragraph>
             </Card>
             <Card className="mt-4 h-[200px] flex flex-col justify-center relative">
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("prompt2")}
+                onClick={() => handleEdit("Prompt 2")}
               />
               <Title level={5}>
-                {Object.keys(profile.matchmaker_prompts)[1]}
+                {profile.matchmaker_prompts &&
+                profile.matchmaker_prompts["Prompt 2"]
+                  ? profile.matchmaker_prompts["Prompt 2"].question
+                  : "Select a question"}
               </Title>
               <Paragraph>
-                {Object.values(profile.matchmaker_prompts)[1]}
+                {profile.matchmaker_prompts &&
+                profile.matchmaker_prompts["Prompt 2"]
+                  ? profile.matchmaker_prompts["Prompt 2"].answer
+                  : "Your answer here..."}
               </Paragraph>
             </Card>
           </Col>
@@ -338,13 +345,19 @@ const MatchmakerProfilePage = () => {
               <Button
                 className="absolute top-2 right-2"
                 icon={<EditOutlined />}
-                onClick={() => showEditModal("prompt3")}
+                onClick={() => handleEdit("Prompt 3")}
               />
               <Title level={5}>
-                {Object.keys(profile.matchmaker_prompts)[2]}
+                {profile.matchmaker_prompts &&
+                profile.matchmaker_prompts["Prompt 3"]
+                  ? profile.matchmaker_prompts["Prompt 3"].question
+                  : "Select a question"}
               </Title>
               <Paragraph>
-                {Object.values(profile.matchmaker_prompts)[2]}
+                {profile.matchmaker_prompts &&
+                profile.matchmaker_prompts["Prompt 3"]
+                  ? profile.matchmaker_prompts["Prompt 3"].answer
+                  : "Your answer here..."}
               </Paragraph>
             </Card>
             <Card className="mt-4 h-[200px] flex flex-col justify-center">
@@ -352,14 +365,22 @@ const MatchmakerProfilePage = () => {
                 <Col span={12}>
                   <Statistic
                     title="Events Attended"
-                    value={profile.events_attended}
+                    value={
+                      profile.matchmaker_tickets
+                        ? profile.matchmaker_tickets.length
+                        : 0
+                    }
                     prefix={<CalendarOutlined />}
                   />
                 </Col>
                 <Col span={12}>
                   <Statistic
                     title="Matching Events"
-                    value={profile.matching_events}
+                    value={
+                      profile.matchmaker_matches
+                        ? profile.matchmaker_matches.length
+                        : 0
+                    }
                     prefix={<TeamOutlined />}
                   />
                 </Col>
@@ -368,20 +389,67 @@ const MatchmakerProfilePage = () => {
           </Col>
         </Row>
       </div>
-      {renderEditModal()}
       <div className="fixed bottom-0 left-0 right-0 bg-background p-4 shadow-md">
         <div className="max-w-48 mx-auto">
           <Button
             type="primary"
             size="large"
             icon={<SaveOutlined />}
-            onClick={() => console.log(profile)}
             block
+            onClick={handleSaveProfile}
+            loading={loading}
           >
             Save Profile
           </Button>
         </div>
       </div>
+      <EditModal
+        visible={modalVisible}
+        onClose={handleModalClose}
+        field={currentEditField}
+        initialValues={profile}
+        onUpdate={handleProfileUpdate}
+      />
+      <Modal
+        title="Set Your Date of Birth"
+        open={dobModalVisible}
+        onOk={async () => {
+          if (selectedDOB) {
+            const dobTimestamp = Timestamp.fromDate(selectedDOB.toDate());
+            const result = await updateDateOfBirth(user.uid, dobTimestamp);
+            if (result.success) {
+              setProfile((prev) => ({ ...prev, date_of_birth: dobTimestamp }));
+              setDobModalVisible(false);
+              message.success("Date of birth updated successfully");
+            } else {
+              message.error(result.error);
+            }
+          } else {
+            message.error("Please select your date of birth");
+          }
+        }}
+        onCancel={() => {}} // Empty function to prevent closing
+        closable={false}
+        maskClosable={false}
+      >
+        <p>
+          We need your date of birth to ensure you are eligible for our service
+          and to provide you with age-appropriate matches. Please note that this
+          information cannot be changed later.
+        </p>
+        <Form.Item
+          name="date_of_birth"
+          label="Date of Birth"
+          rules={[
+            { required: true, message: "Please select your date of birth" },
+          ]}
+        >
+          <DatePicker
+            style={{ width: "100%" }}
+            onChange={(date) => setSelectedDOB(date)}
+          />
+        </Form.Item>
+      </Modal>
     </div>
   );
 };

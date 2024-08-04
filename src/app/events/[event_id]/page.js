@@ -1,4 +1,3 @@
-// app/events/[event-id]/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +9,6 @@ import {
   message,
   Card,
   Descriptions,
-  Tag,
   Statistic,
   Row,
   Col,
@@ -29,8 +27,11 @@ import {
 } from "@ant-design/icons";
 import Image from "next/image";
 import dayjs from "dayjs";
+import { withGuard } from "@/components/GuardRoute";
+import { useAuth } from "@/contexts/AuthContext";
+import { buyTickets, fetchEvent } from "@/app/events/[event_id]/actions";
 
-export default function EventDetails() {
+function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -39,26 +40,21 @@ export default function EventDetails() {
   const params = useParams();
   const router = useRouter();
   const event_id = params.event_id;
+  const { user } = useAuth();
+
+  async function getEventData() {
+    setLoading(true);
+    const result = await fetchEvent(event_id);
+    if (result.success) {
+      setEvent(result.data);
+    } else {
+      message.error(result.error);
+    }
+    setLoading(false);
+  }
 
   useEffect(() => {
-    // Simulating API call to get event data
-    setTimeout(() => {
-      const dummyEvent = {
-        id: event_id,
-        event_name: "Sample Event",
-        event_description:
-          "This is a sample event description. It's going to be an amazing event you don't want to miss!",
-        event_location: "New York, NY",
-        event_start: dayjs().add(1, "month"),
-        event_end: dayjs().add(1, "month").add(3, "hour"),
-        event_price: 50,
-        event_capacity: 100,
-        event_picture: "https://picsum.photos/seed/picsum/800/400",
-        available_tickets: 50,
-      };
-      setEvent(dummyEvent);
-      setLoading(false);
-    }, 1000);
+    getEventData();
   }, [event_id]);
 
   const showModal = () => setIsModalVisible(true);
@@ -68,15 +64,26 @@ export default function EventDetails() {
     setTicketQuantity(1);
   };
 
-  const handleBuyTickets = () => {
+  const handleBuyTickets = async () => {
     if (checkoutStep === 0) {
       setCheckoutStep(1);
     } else {
-      // Simulating payment process
-      setTimeout(() => {
-        message.success(`Successfully purchased ${ticketQuantity} ticket(s)!`);
-        setCheckoutStep(2);
-      }, 1000);
+      try {
+        // Simulating payment process
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const result = await buyTickets(event_id, user.uid, ticketQuantity);
+
+        if (result.success) {
+          message.success(result.message);
+          setCheckoutStep(2);
+        } else {
+          message.error(result.error);
+        }
+      } catch (error) {
+        message.error("Error processing the transaction.");
+        console.error("Error: ", error);
+      }
     }
   };
 
@@ -92,9 +99,34 @@ export default function EventDetails() {
     );
   }
 
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-background p-8 flex justify-center items-center">
+        <Result
+          status="404"
+          title="Event Not Found"
+          subTitle="Sorry, the event you are looking for does not exist."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
+        <div className={"flex"}>
+          <h1 className="text-3xl font-bold text-foreground mb-6">
+            View Event
+          </h1>
+          {user && user.uid === event.organizer_id && (
+            <Button
+              onClick={() => router.push(`/events/${event_id}/edit`)}
+              className={"ml-4"}
+            >
+              Edit Event
+            </Button>
+          )}
+        </div>
         <Card
           cover={
             <div className="relative w-full h-96">
@@ -117,12 +149,12 @@ export default function EventDetails() {
           <Descriptions bordered>
             <Descriptions.Item label="Date" span={3}>
               <CalendarOutlined className="mr-2" />
-              {event.event_start.format("MMMM D, YYYY")}
+              {dayjs(event.event_start).format("MMMM D, YYYY")}
             </Descriptions.Item>
             <Descriptions.Item label="Time" span={3}>
               <CalendarOutlined className="mr-2" />
-              {event.event_start.format("h:mm A")} -{" "}
-              {event.event_end.format("h:mm A")}
+              {dayjs(event.event_start).format("h:mm A")} -{" "}
+              {dayjs(event.event_end).format("h:mm A")}
             </Descriptions.Item>
             <Descriptions.Item label="Location" span={3}>
               <EnvironmentOutlined className="mr-2" />
@@ -148,7 +180,7 @@ export default function EventDetails() {
             <Col span={8}>
               <Statistic
                 title="Available Tickets"
-                value={event.available_tickets}
+                value={event.event_capacity}
                 prefix={<TagOutlined />}
               />
             </Col>
@@ -189,11 +221,11 @@ export default function EventDetails() {
                 {event.event_name}
               </Descriptions.Item>
               <Descriptions.Item label="Date">
-                {event.event_start.format("MMMM D, YYYY")}
+                {dayjs(event.event_start).format("MMMM D, YYYY")}
               </Descriptions.Item>
               <Descriptions.Item label="Time">
-                {event.event_start.format("h:mm A")} -{" "}
-                {event.event_end.format("h:mm A")}
+                {dayjs(event.event_start).format("h:mm A")} -{" "}
+                {dayjs(event.event_end).format("h:mm A")}
               </Descriptions.Item>
               <Descriptions.Item label="Price per Ticket">
                 ${event.event_price}
@@ -274,7 +306,7 @@ export default function EventDetails() {
               </Button>
             </Card>
             <div className="flex justify-between">
-              <Button onClick={() => router.push("/events/user-dashboard")}>
+              <Button onClick={() => router.push("/dashboard")}>
                 Go to Dashboard
               </Button>
               <Button onClick={handleCancel}>Close</Button>
@@ -285,3 +317,5 @@ export default function EventDetails() {
     </div>
   );
 }
+
+export default withGuard(EventDetails, { requireAuth: true });

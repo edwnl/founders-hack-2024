@@ -1,8 +1,8 @@
-// app/events/organizer-dashboard/page.js
+// app/events/page.js
 "use client";
 
-import React from "react";
-import { Button, List, Card, Typography, Space } from "antd";
+import React, { useState, useEffect } from "react";
+import { Button, List, Card, Typography, Space, Input } from "antd";
 import Link from "next/link";
 import {
   CalendarOutlined,
@@ -10,27 +10,54 @@ import {
   ClockCircleOutlined,
   DollarOutlined,
   TeamOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
-import { dummyEvents } from "@/app/events/organizer-dashboard/dummy-data";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAllEvents } from "@/app/events/actions";
 
 const { Text } = Typography;
 
-export default function OrganizerDashboard() {
+function EventsPage() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async (search = "") => {
+    setLoading(true);
+    try {
+      const fetchedEvents = await getAllEvents(search);
+      setEvents(fetchedEvents);
+    } catch (error) {
+      console.error("Failed to fetch events", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    fetchEvents(value);
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
-          <Link href={"/events/new/edit"}>
-            <Button
-              type="primary"
-              className="bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-            >
-              Create New Event
-            </Button>
-          </Link>
+          <h1 className="text-3xl font-bold text-foreground">All Events</h1>
+          <Input
+            placeholder="Search events"
+            prefix={<SearchOutlined />}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ width: 200 }}
+          />
         </div>
         <List
+          loading={loading}
           grid={{
             gutter: 16,
             xs: 1,
@@ -40,7 +67,7 @@ export default function OrganizerDashboard() {
             xl: 3,
             xxl: 3,
           }}
-          dataSource={dummyEvents}
+          dataSource={events}
           renderItem={(event) => (
             <List.Item>
               <Card
@@ -55,10 +82,7 @@ export default function OrganizerDashboard() {
                 }
                 actions={[
                   <Link key="view" href={`/events/${event._id}`}>
-                    <Button>View Listing</Button>
-                  </Link>,
-                  <Link key="edit" href={`/events/${event._id}/edit`}>
-                    <Button>Edit Event</Button>
+                    <Button>View Event</Button>
                   </Link>,
                 ]}
               >
@@ -72,11 +96,13 @@ export default function OrganizerDashboard() {
                       </Space>
                       <Space>
                         <CalendarOutlined />
-                        <Text>{event.event_start.toLocaleDateString()}</Text>
+                        <Text>
+                          {new Date(event.event_start).toLocaleDateString()}
+                        </Text>
                       </Space>
                       <Space>
                         <ClockCircleOutlined />
-                        <Text>{`${event.event_start.toLocaleTimeString()} - ${event.event_end.toLocaleTimeString()}`}</Text>
+                        <Text>{`${new Date(event.event_start).toLocaleTimeString()} - ${new Date(event.event_end).toLocaleTimeString()}`}</Text>
                       </Space>
                       <Space>
                         <DollarOutlined />
@@ -84,7 +110,7 @@ export default function OrganizerDashboard() {
                       </Space>
                       <Space>
                         <TeamOutlined />
-                        <Text>Total Attendees: {event.attendees.length}</Text>
+                        <Text>Capacity: {event.event_capacity}</Text>
                       </Space>
                     </Space>
                   }
@@ -97,3 +123,5 @@ export default function OrganizerDashboard() {
     </div>
   );
 }
+
+export default EventsPage;
