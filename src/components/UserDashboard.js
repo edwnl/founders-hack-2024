@@ -1,8 +1,7 @@
-// app/events/user-dashboard/OrganizerDashboard.js
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, List, Switch, Card, Typography, Space, Spin } from "antd";
+import { Button, List, Switch, Card, Typography, Space } from "antd";
 import Link from "next/link";
 import {
   CalendarOutlined,
@@ -11,42 +10,34 @@ import {
   DollarOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
-import { withGuard } from "@/components/GuardRoute";
-import { useAuth } from "@/contexts/AuthContext";
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config'; // Adjust this import based on your Firebase setup
+import { dummyUserEvents } from "@/components/dummy-user-data";
+import dynamic from 'next/dynamic';
+const useAuth = dynamic(() => import('@/contexts/AuthContext').then(mod => mod.useAuth), { ssr: false });
+import { getUserData } from '@/app/actions/userActions';
 
 const { Text } = Typography;
 
 function UserDashboard() {
   const [matchMakerProfiles, setMatchMakerProfiles] = useState({});
-  const [userEvents, setUserEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
   const { user, userMode } = useAuth();
 
   useEffect(() => {
-    async function fetchUserEvents() {
+    const fetchUserData = async () => {
       if (user) {
-        setLoading(true);
-        const eventsRef = collection(db, 'event');
-        const q = query(eventsRef, where("matchmaker_attendees", "array-contains", user.uid));
-        
         try {
-          const querySnapshot = await getDocs(q);
-          const events = [];
-          querySnapshot.forEach((doc) => {
-            events.push({ id: doc.id, ...doc.data() });
-          });
-          setUserEvents(events);
+          console.log("Fetching user data...");
+          const data = await getUserData();
+          console.log("User data fetched:", data);
+          setUserData(data || {}); // Default to an empty object if data is undefined
         } catch (error) {
-          console.error("Error fetching user events: ", error);
-        } finally {
-          setLoading(false);
+          console.error("Error fetching user data:", error);
+          setUserData({}); // Default to an empty object on error
         }
       }
-    }
+    };
 
-    fetchUserEvents();
+    fetchUserData();
   }, [user]);
 
   const toggleMatchMaker = (eventId) => {
@@ -71,6 +62,13 @@ function UserDashboard() {
           <h1 className="text-3xl font-bold text-foreground">Your Events</h1>
           <Text>Welcome, {user.uid}</Text>
         </div>
+        {userData ? (
+          <div className="mb-4">
+            <Text>User ID: {userData.id || 'N/A'}</Text> {/* Add fallback if userData.id is undefined */}
+          </div>
+        ) : (
+          <div className="mb-4">Loading user data...</div>
+        )}
         <List
           grid={{
             gutter: 16,
@@ -118,19 +116,19 @@ function UserDashboard() {
                       </Space>
                       <Space>
                         <CalendarOutlined />
-                        <Text>{new Date(event.event_start).toLocaleDateString()}</Text>
+                        <Text>{event.event_start?.toLocaleDateString() || 'N/A'}</Text> {/* Add fallback */}
                       </Space>
                       <Space>
                         <ClockCircleOutlined />
-                        <Text>{`${new Date(event.event_start).toLocaleTimeString()}`}</Text>
+                        <Text>{`${event.event_start?.toLocaleTimeString() || 'N/A'} - ${event.event_end?.toLocaleTimeString() || 'N/A'}`}</Text> {/* Add fallback */}
                       </Space>
                       <Space>
                         <DollarOutlined />
-                        <Text>Price: ${event.event_price}</Text>
+                        <Text>Price: ${event.event_price || 'N/A'}</Text> {/* Add fallback */}
                       </Space>
                       <Space>
                         <IdcardOutlined />
-                        <Text>Your Tickets: 1</Text>
+                        <Text>Your Tickets: {event.user_tickets || 'N/A'}</Text> {/* Add fallback */}
                       </Space>
                       <Space>
                         <Text>Show in Match Maker:</Text>
